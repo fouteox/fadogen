@@ -174,7 +174,7 @@ services:
     logging: *default-logging
     labels:
       traefik.enable: true
-      traefik.http.routers.pgadmin.rule: Host(`APP_LOCALHOST`)
+      traefik.http.routers.pgadmin.rule: Host(`${APP_LOCALHOST}`)
       traefik.http.routers.pgadmin.entryPoints: pgadmin
       traefik.http.routers.pgadmin.middlewares: "pgadmin-auth,pgadmin-retry"
       traefik.http.middlewares.pgadmin-retry.retry.attempts: 4
@@ -199,7 +199,7 @@ services:
     labels:
       traefik.enable: true
 
-      traefik.http.routers.minio-console.rule: Host(`APP_LOCALHOST`)
+      traefik.http.routers.minio-console.rule: Host(`${APP_LOCALHOST}`)
       traefik.http.routers.minio-console.entryPoints: minio-console
       traefik.http.routers.minio-console.service: minio-console-service
       traefik.http.routers.minio-console.middlewares: "minio-auth,minio-retry"
