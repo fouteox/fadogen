@@ -1,0 +1,208 @@
+x-logging: &default-logging
+  driver: 'json-file'
+  options:
+    max-size: "50m"
+    max-file: 6
+x-network: &default-network
+  internal:
+x-base: &base
+  profiles: [app]
+  depends_on:
+    pgsql:
+      condition: service_healthy
+    valkey:
+      condition: service_healthy
+    minio:
+      condition: service_healthy
+  image: ${IMAGE_NAME:-app}:latest
+  user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+  ulimits:
+    nofile:
+      soft: 20000
+      hard: 40000
+  security_opt:
+    - no-new-privileges:true
+  volumes:
+    - 'app_public:/app/storage/app/public'
+    - 'app_logs:/app/storage/logs'
+    - 'app_cache:/app/bootstrap/cache'
+  logging: *default-logging
+  restart: always
+
+services:
+  app:
+    <<: *base
+    build:
+      args:
+        APP_ENV: 'production' # to load .env.production
+        WWWUSER: ${HOST_UID:-1000}
+        WWWGROUP: ${HOST_GID:-1000}
+    environment:
+      INERTIA_SSR: true
+      SERVER_NAME: :80
+    networks:
+      - internal
+      - traefik
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "localhost:8000/up" ]
+      start_period: 5s
+      interval: 10s
+      retries: 12
+    labels:
+      traefik.enable: true
+      traefik.http.routers.fadogen.rule: Host(`${APP_HOST}`)
+      traefik.http.services.fadogen.loadbalancer.server.port: 8000
+
+  horizon:
+    <<: *base
+    environment:
+      CONTAINER_MODE: horizon
+    networks: *default-network
+    depends_on:
+      app:
+        condition: service_healthy
+
+  scheduler:
+    <<: *base
+    environment:
+      CONTAINER_MODE: scheduler
+    networks: *default-network
+    depends_on:
+      app:
+        condition: service_healthy
+
+  reverb:
+    <<: *base
+    environment:
+      CONTAINER_MODE: reverb
+    networks: *default-network
+    depends_on:
+      app:
+        condition: service_healthy
+
+  valkey:
+    profiles: [app]
+    image: 'valkey/valkey:alpine'
+    ulimits:
+      nofile:
+        soft: 20000
+        hard: 40000
+    command: [ "valkey-server", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "2gb" ]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - 'stack-valkey:/data'
+    logging: *default-logging
+    networks: *default-network
+    healthcheck:
+      test: [ "CMD", "valkey-cli", "ping" ]
+      retries: 3
+      timeout: 5s
+    restart: always
+
+  pgsql:
+    profiles: [app]
+    image: 'postgres:17-bookworm'
+    ulimits:
+      nofile:
+        soft: 20000
+        hard: 40000
+        # command: ["-c", "config_file=/etc/postgresql/postgresql.conf"]
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      PGPASSWORD: '${DB_PASSWORD}'
+      POSTGRES_DB: '${DB_DATABASE}'
+      POSTGRES_USER: '${DB_USERNAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+    volumes:
+      # - './postgresql.conf:/etc/postgresql/postgresql.conf'
+      - 'stack-pgsql:/var/lib/postgresql/data'
+      - '../backup:/backup'
+    networks: *default-network
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "${DB_DATABASE}", "-U", "${DB_USERNAME}"]
+      interval: 15s
+      retries: 12
+      timeout: 20s
+    restart: always
+    logging: *default-logging
+    labels:
+      docker-volume-backup.stop-during-backup: true
+      docker-volume-backup.archive-pre: /bin/sh -c 'pg_dump -U ${DB_USERNAME} -F t ${DB_DATABASE} > /backup/${DB_DATABASE}-database.tar'
+
+  backup:
+    profiles: [administration]
+    image: offen/docker-volume-backup:v2
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      BACKUP_FILENAME: backup-%Y-%m-%dT%H-%M-%S.tar.gz
+      BACKUP_PRUNING_PREFIX: backup-
+      BACKUP_CRON_EXPRESSION: "0 2 * * *" # run every day at 2am
+      BACKUP_RETENTION_DAYS: '7'
+    restart: always
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    logging: *default-logging
+    networks: *default-network
+    volumes:
+      - stack-pgsql:/backup/pgsql:ro
+      - ../backup/volumes:/archive
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  minio:
+    profiles: [app]
+    image: 'minio/minio:latest'
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MINIO_ROOT_USER: '${MINIO_ROOT_USER}'
+      MINIO_ROOT_PASSWORD: '${MINIO_ROOT_PASSWORD}'
+    volumes:
+      - 'stack-minio:/data/minio'
+    networks: *default-network
+    command: 'minio server /data/minio --console-address ":8900"'
+    restart: always
+    logging: *default-logging
+    labels:
+      traefik.enable: true
+
+      traefik.http.routers.minio-console.rule: Host(`localhost`) || Host(`gitlab.local`)
+      traefik.http.routers.minio-console.entryPoints: minio-console
+      traefik.http.routers.minio-console.service: minio-console-service
+      traefik.http.routers.minio-console.middlewares: "minio-auth,minio-retry"
+      traefik.http.services.minio-console-service.loadbalancer.server.port: 8900
+
+      traefik.http.routers.minio.rule: Host(`${APP_HOST}`) || Host(`localhost`) || Host(`gitlab.local`)
+      traefik.http.routers.minio.entryPoints: minio
+      traefik.http.routers.minio.service: minio-service
+      traefik.http.routers.minio.middlewares: "minio-retry,minio-compress"
+      traefik.http.services.minio-service.loadbalancer.server.port: 9000
+
+      traefik.http.middlewares.minio-compress.compress: true
+      traefik.http.middlewares.minio-retry.retry.attempts: 4
+      traefik.http.middlewares.minio-retry.retry.initialinterval: 100ms
+      traefik.http.middlewares.minio-auth.basicauth.removeheader: true
+      traefik.http.middlewares.minio-auth.basicauth.users: "user:$$2y$$05$$8zbpsdxg9wDiiKdqxiB0zeAlxZtG68P1SDBOvCN4IooLFewLx70Gm" # user:123456
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      retries: 3
+      timeout: 5s
+
+networks:
+  internal:
+  traefik:
+    external: true
+
+volumes:
+  app_public:
+  app_logs:
+  app_cache:
+  stack-pgsql:
+  stack-valkey:
+  stack-minio:
+

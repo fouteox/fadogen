@@ -1,0 +1,211 @@
+---
+- name: Définition des variables Cloudflare
+  set_fact:
+    cloudflare_headers:
+      X-Auth-Email: "{{ cloudflare_email }}"
+      X-Auth-Key: "{{ cloudflare_api_key }}"
+      Content-Type: "application/json"
+    tunnel_name: "{{ cloudflare_tunnel_name }}"
+
+- name: Vérification de l'existence du tunnel Cloudflare
+  uri:
+    url: "{{ cloudflare_api }}/accounts/{{ cloudflare_account_id }}/cfd_tunnel?name={{ tunnel_name | urlencode }}"
+    method: GET
+    headers: "{{ cloudflare_headers }}"
+    status_code: 200
+  register: existing_tunnels
+  delegate_to: localhost
+  become: false
+
+- name: Définition de l'état du tunnel
+  set_fact:
+    active_tunnel: "{{ existing_tunnels.json.result | selectattr('deleted_at', 'none') | list }}"
+    tunnel_needs_creation: "{{ (existing_tunnels.json.result | selectattr('deleted_at', 'none') | list) | length == 0 }}"
+
+- name: Suppression des tunnels existants si nécessaire
+  uri:
+    url: "{{ cloudflare_api }}/accounts/{{ cloudflare_account_id }}/cfd_tunnel/{{ item.id }}"
+    method: DELETE
+    headers: "{{ cloudflare_headers }}"
+    status_code: [200, 404]
+  delegate_to: localhost
+  become: false
+  loop: "{{ existing_tunnels.json.result }}"
+  when: tunnel_needs_creation
+
+- name: Création du tunnel Cloudflare
+  uri:
+    url: "{{ cloudflare_api }}/accounts/{{ cloudflare_account_id }}/cfd_tunnel"
+    method: POST
+    headers: "{{ cloudflare_headers }}"
+    body_format: json
+    body:
+      name: "{{ tunnel_name }}"
+      config_src: "cloudflare"
+    status_code: 200
+  register: tunnel_response
+  delegate_to: localhost
+  become: false
+  when: tunnel_needs_creation
+
+- name: Récupération de l'ID du tunnel
+  set_fact:
+    tunnel_id: "{{ (tunnel_response.json.result.id if tunnel_response.json is defined else active_tunnel[0].id) }}"
+
+- name: Récupération du token du tunnel
+  uri:
+    url: "{{ cloudflare_api }}/accounts/{{ cloudflare_account_id }}/cfd_tunnel/{{ tunnel_id }}/token"
+    method: GET
+    headers: "{{ cloudflare_headers }}"
+    status_code: 200
+  register: tunnel_token
+  delegate_to: localhost
+  become: false
+
+- name: Configuration DNS pour le tunnel
+  uri:
+    url: "{{ cloudflare_api }}/accounts/{{ cloudflare_account_id }}/cfd_tunnel/{{ tunnel_id }}/configurations"
+    method: PUT
+    headers: "{{ cloudflare_headers }}"
+    body_format: json
+    body:
+      config:
+        ingress:
+          - hostname: "{{ cloudflare_ssh_domain }}"
+            service: ssh://localhost:22
+          - hostname: "{{ cloudflare_domain }}"
+            service: http://localhost
+          - service: http_status:404
+    status_code: 200
+  delegate_to: localhost
+  become: false
+
+- name: Création du répertoire .cloudflared
+  ansible.builtin.file:
+    path: /root/.cloudflared
+    state: directory
+    mode: '0700'
+
+- name: Vérification du fichier de service cloudflared
+  ansible.builtin.stat:
+    path: /etc/systemd/system/cloudflared.service
+  register: cloudflared_service_file
+
+- name: Lecture du contenu du service si existant
+  ansible.builtin.command:
+    cmd: "systemctl cat cloudflared"
+  register: service_content
+  ignore_errors: true
+  when: cloudflared_service_file.stat.exists
+
+- name: Vérification si le service cloudflared est actif
+  ansible.builtin.command:
+    cmd: "systemctl is-active cloudflared"
+  register: service_active
+  changed_when: false
+  failed_when: false
+
+- name: Réinstallation du service cloudflared
+  block:
+    - name: Arrêt du service cloudflared
+      ansible.builtin.service:
+        name: cloudflared
+        state: stopped
+      when: service_active.rc == 0
+
+    - name: Vérification si la commande uninstall est nécessaire
+      ansible.builtin.stat:
+        path: /etc/systemd/system/cloudflared.service
+      register: service_exists
+
+    - name: Désinstallation du service cloudflared
+      ansible.builtin.command:
+        cmd: "cloudflared service uninstall"
+      when: service_exists.stat.exists
+      register: uninstall_result
+      failed_when:
+        - uninstall_result.rc != 0
+        - "'Unit file cloudflared.service does not exist' not in uninstall_result.stderr"
+
+    - name: Installation du service cloudflared avec le nouveau tunnel
+      ansible.builtin.command:
+        cmd: "cloudflared service install {{ tunnel_token.json.result }}"
+
+    - name: Démarrage du service cloudflared
+      ansible.builtin.service:
+        name: cloudflared
+        state: started
+        enabled: yes
+  when: >
+    not cloudflared_service_file.stat.exists or
+    (service_content.stdout is defined and tunnel_token.json.result not in service_content.stdout)
+
+- name: Extraction du domaine parent
+  set_fact:
+    parent_domain: "{{ cloudflare_domain.split('.')[-2:] | join('.') }}"
+
+- name: Récupération des zones existantes
+  uri:
+    url: "{{ cloudflare_api }}/zones?name={{ parent_domain }}"
+    method: GET
+    headers: "{{ cloudflare_headers }}"
+    status_code: 200
+  register: "zones_info"
+  delegate_to: localhost
+  become: false
+
+- name: Création de la zone si elle n'existe pas
+  uri:
+    url: "{{ cloudflare_api }}/zones"
+    method: POST
+    headers: "{{ cloudflare_headers }}"
+    body_format: json
+    body:
+      name: "{{ parent_domain }}"
+      account:
+        id: "{{ cloudflare_account_id }}"
+      jump_start: true
+    status_code: [200, 201]
+  register: new_zone
+  delegate_to: localhost
+  become: false
+  when: zones_info.json.result | length == 0
+
+- name: Définition de l'ID de la zone
+  set_fact:
+    zone_id: "{{ (new_zone.json.result.id if new_zone.json is defined else zones_info.json.result[0].id) }}"
+  when: (new_zone.json is defined) or (zones_info.json.result | length > 0)
+
+- name: Récupération des enregistrements DNS existants
+  uri:
+    url: "{{ cloudflare_api }}/zones/{{ zone_id }}/dns_records?type=CNAME&name={{ item }}"
+    method: GET
+    headers: "{{ cloudflare_headers }}"
+    status_code: 200
+  register: "existing_records"
+  delegate_to: localhost
+  become: false
+  loop:
+    - "{{ cloudflare_ssh_domain }}"
+    - "{{ cloudflare_domain }}"
+
+- name: Création des nouveaux enregistrements CNAME
+  uri:
+    url: "{{ cloudflare_api }}/zones/{{ zone_id }}/dns_records"
+    method: POST
+    headers: "{{ cloudflare_headers }}"
+    body_format: json
+    body:
+      type: "CNAME"
+      name: "{{ item }}"
+      content: "{{ tunnel_id }}.cfargotunnel.com"
+      proxied: true
+    status_code: [200, 201]
+  delegate_to: localhost
+  become: false
+  loop:
+    - "{{ cloudflare_ssh_domain }}"
+    - "{{ cloudflare_domain }}"
+  loop_control:
+    index_var: index
+  when: existing_records.results[index].json.result | length == 0

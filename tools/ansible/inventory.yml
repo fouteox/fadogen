@@ -1,0 +1,7 @@
+all:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  hosts:
+    raspberry:
+      ansible_host: "{{ lookup('file', 'config.yml') | from_yaml | dict2items | selectattr('key', 'eq', 'raspberry') | map(attribute='value.hostname') | first }}"
+      ansible_user: "{{ lookup('file', 'config.yml') | from_yaml | dict2items | selectattr('key', 'eq', 'raspberry') | map(attribute='value.user') | first }}"

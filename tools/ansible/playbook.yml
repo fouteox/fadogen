@@ -1,0 +1,15 @@
+---
+- name: Déploiement sur Raspberry Pi
+  hosts: raspberry
+  become: true
+
+  roles:
+    - role: system
+    - role: docker
+      vars:
+        docker_users:
+          - "{{ config.raspberry.user }}"
+    - role: docker_credentials
+    - role: cloudflared
+    - role: cloudflare_tunnel
+    - role: traefik

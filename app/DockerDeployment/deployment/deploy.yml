@@ -1,0 +1,112 @@
+name: Build and Deploy
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ${{ vars.SYSTEM_ARCH == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create .env.production file
+        run: echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 -d > .env.production
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=short
+            type=ref,event=branch
+            latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          target: prod
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            WWWUSER=${{ secrets.SSH_UID }}
+            WWWGROUP=${{ secrets.SSH_GID }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Install cloudflared
+        run: |
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+
+      - name: Setup SSH configuration
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          name: id_ed25519
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          config: |
+            Host ${{ secrets.SSH_REMOTE_HOSTNAME }}
+              ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h
+              User ${{ secrets.SSH_USER }}
+              IdentityFile ~/.ssh/id_ed25519
+              StrictHostKeyChecking accept-new
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create .env.production file
+        run: echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 -d > .env.production
+
+      - name: Create project directory and copy files
+        env:
+          REPO_SHORT_NAME: ${{ github.event.repository.name }}
+        run: |
+          ssh ${{ secrets.SSH_REMOTE_HOSTNAME }} "mkdir -p ~/$REPO_SHORT_NAME"
+          scp compose.prod.yaml .env.production ${{ secrets.SSH_REMOTE_HOSTNAME }}:~/$REPO_SHORT_NAME/
+
+      - name: Deploy with Docker context
+        env:
+          REPO_SHORT_NAME: ${{ github.event.repository.name }}
+          FULL_IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh ${{ secrets.SSH_REMOTE_HOSTNAME }} "docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin"
+
+          ssh ${{ secrets.SSH_REMOTE_HOSTNAME }} "cd ~/$REPO_SHORT_NAME && \
+            export HOST_UID=${{ secrets.SSH_UID }} && \
+            export HOST_GID=${{ secrets.SSH_GID }} && \
+            export IMAGE_NAME=$FULL_IMAGE_NAME && \
+            docker compose -f compose.prod.yaml --env-file .env.production pull && \
+            docker compose -f compose.prod.yaml --env-file .env.production up -d"

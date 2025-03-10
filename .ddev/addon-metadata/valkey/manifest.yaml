@@ -1,0 +1,9 @@
+name: valkey
+repository: fouteox/ddev-valkey
+version: 0.0.1
+install_date: "2025-02-10T10:28:19+01:00"
+project_files:
+    - commands/valkey/valkey-cli
+    - docker-compose.valkey.yaml
+global_files: []
+removal_actions: []

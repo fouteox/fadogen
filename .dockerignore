@@ -1,0 +1,10 @@
+**/.DS_Store
+.vault-password
+.ddev
+.github
+.vscode
+.idea
+.config
+.data
+Dockerfile
+compose*.yaml

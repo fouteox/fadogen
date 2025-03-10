@@ -1,0 +1,7 @@
+---
+- name: Installation de Docker
+  include_role:
+    name: geerlingguy.docker
+  vars:
+    docker_users:
+      - "{{ docker_user }}"

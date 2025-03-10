@@ -1,0 +1,50 @@
+{
+	{$CADDY_GLOBAL_OPTIONS}
+
+	frankenphp
+}
+
+{$CADDY_SERVER_SERVER_NAME} {
+	log {
+		level WARN
+
+		format filter {
+			wrap {$CADDY_SERVER_LOGGER}
+			fields {
+				uri query {
+					replace authorization REDACTED
+				}
+			}
+		}
+	}
+
+	route {
+		@reverb {
+			path /app/* /apps/*
+		}
+		handle @reverb {
+			reverse_proxy reverb:8080
+		}
+
+		root * "{$APP_PUBLIC_PATH}"
+		encode zstd br gzip 
+
+		{$CADDY_SERVER_EXTRA_DIRECTIVES}
+
+		# Disable Topics tracking if not enabled explicitly: https://github.com/jkarlin/topics
+		header ?Permissions-Policy "browsing-topics=()"
+
+		@phpRoute {
+			not path /.well-known/mercure*
+			not file {path}
+		}
+		rewrite @phpRoute index.php
+
+		@frontController path index.php
+		php @frontController
+
+		file_server {
+			hide *.php
+		}
+	}
+}

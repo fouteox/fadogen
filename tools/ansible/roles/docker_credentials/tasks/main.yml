@@ -1,0 +1,104 @@
+---
+- name: Installation des dépendances pour le credential helper
+  ansible.builtin.apt:
+    name:
+      - gnupg2
+      - pass
+    state: present
+  become: true
+
+- name: Téléchargement du credential helper Docker
+  ansible.builtin.get_url:
+    url: "{{ docker_credential_helper_url }}"
+    dest: "/tmp/docker-credential-pass"
+    mode: '0644'
+
+- name: Rendre le credential helper exécutable
+  ansible.builtin.file:
+    path: "/tmp/docker-credential-pass"
+    mode: '0755'
+
+- name: Installation du credential helper
+  ansible.builtin.copy:
+    src: "/tmp/docker-credential-pass"
+    dest: "/usr/local/bin/docker-credential-pass"
+    mode: '0755'
+    remote_src: yes
+  become: true
+
+- name: Vérification du répertoire .gnupg
+  ansible.builtin.file:
+    path: "/home/{{ credential_user }}/.gnupg"
+    state: directory
+    owner: "{{ credential_user }}"
+    group: "{{ credential_user }}"
+    mode: '0700'
+  become: yes
+  become_user: "{{ credential_user }}"
+
+- name: Vérification de l'existence d'une clé GPG pour pass
+  ansible.builtin.shell: gpg2 --list-secret-keys | grep -q "Docker Credentials" || echo "No key found"
+  register: gpg_key_check
+  become: yes
+  become_user: "{{ credential_user }}"
+  changed_when: false
+
+- name: Génération d'une clé GPG pour pass
+  ansible.builtin.shell: |
+    export GNUPGHOME=/home/{{ credential_user }}/.gnupg
+    cat > /tmp/gpg-gen-key << EOF
+    %echo Generating a GPG key for Docker credentials
+    Key-Type: RSA
+    Key-Length: 2048
+    Name-Real: Docker Credentials
+    Name-Email: docker@localhost
+    Expire-Date: 0
+    %no-protection
+    %commit
+    %echo done
+    EOF
+    gpg2 --batch --gen-key /tmp/gpg-gen-key
+    rm /tmp/gpg-gen-key
+  become: yes
+  become_user: "{{ credential_user }}"
+  when: "'No key found' in gpg_key_check.stdout"
+
+- name: Récupération de l'ID de la clé GPG
+  ansible.builtin.shell: gpg2 --list-secret-keys --keyid-format LONG "Docker Credentials" | grep sec | awk '{print $2}' | cut -d'/' -f2
+  register: gpg_key_id
+  become: yes
+  become_user: "{{ credential_user }}"
+  changed_when: false
+
+- name: Vérification si pass est déjà initialisé
+  ansible.builtin.stat:
+    path: "/home/{{ credential_user }}/.password-store"
+  register: pass_store
+  become: yes
+  become_user: "{{ credential_user }}"
+
+- name: Initialisation de pass
+  ansible.builtin.command:
+    cmd: "pass init '{{ gpg_key_id.stdout }}'"
+  become: yes
+  become_user: "{{ credential_user }}"
+  when: not pass_store.stat.exists
+
+- name: Création du répertoire de configuration Docker
+  ansible.builtin.file:
+    path: "/home/{{ credential_user }}/.docker"
+    state: directory
+    owner: "{{ credential_user }}"
+    group: "{{ credential_user }}"
+    mode: '0700'
+
+- name: Configuration du credential helper Docker
+  ansible.builtin.copy:
+    content: |
+      {
+        "credsStore": "pass"
+      }
+    dest: "/home/{{ credential_user }}/.docker/config.json"
+    owner: "{{ credential_user }}"
+    group: "{{ credential_user }}"
+    mode: '0600'

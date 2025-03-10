@@ -1,0 +1,8 @@
+scheduler:
+    __BASE_REFERENCE__: true
+    environment:
+        CONTAINER_MODE: scheduler
+    __BASE_NETWORKS__: true
+    depends_on:
+        app:
+            condition: service_healthy

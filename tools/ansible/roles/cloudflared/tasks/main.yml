@@ -1,0 +1,21 @@
+---
+- name: Installation des dépendances Python pour deb822
+  ansible.builtin.apt:
+    name: python3-debian
+    state: present
+  become: true
+
+- name: Add Cloudflare repository
+  ansible.builtin.deb822_repository:
+    name: cloudflare-cloudflared
+    uris: https://pkg.cloudflare.com/cloudflared
+    suites: any
+    components: main
+    signed_by: https://pkg.cloudflare.com/cloudflare-main.gpg
+  become: true
+
+- name: Install cloudflared
+  ansible.builtin.apt:
+    name: cloudflared
+    state: present
+    update_cache: yes

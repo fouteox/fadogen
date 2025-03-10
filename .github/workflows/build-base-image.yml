@@ -1,0 +1,137 @@
+name: Base Image for PHP 8.2, 8.3, 8.4
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TEMP_REGISTRY: ghcr.io/${{ github.repository }}
+  FINAL_REGISTRY: fouteox
+  IMAGE_NAME: laravel-php-base
+  FRANKENPHP_VERSION: 1.4
+  NODE_VERSION: 22
+  BUN_VERSION: 1.2.4
+  SUPERCRONIC_VERSION: 0.2.33
+
+jobs:
+  build-amd64:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        php-version: ['8.2', '8.3', '8.4']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push AMD64
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app/DockerDeployment
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            PHP_VERSION=${{ matrix.php-version }}
+            FRANKENPHP_VERSION=${{ env.FRANKENPHP_VERSION }}
+            NODE_VERSION=${{ env.NODE_VERSION }}
+            BUN_VERSION=${{ env.BUN_VERSION }}
+            SUPERCRONIC_VERSION=${{ env.SUPERCRONIC_VERSION }}
+          tags: ${{ env.TEMP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php-version }}-amd64-${{ github.run_id }}
+
+  build-arm64:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        php-version: ['8.2', '8.3', '8.4']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ARM64
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app/DockerDeployment
+          platforms: linux/arm64
+          push: true
+          build-args: |
+            PHP_VERSION=${{ matrix.php-version }}
+            FRANKENPHP_VERSION=${{ env.FRANKENPHP_VERSION }}
+            NODE_VERSION=${{ env.NODE_VERSION }}
+            BUN_VERSION=${{ env.BUN_VERSION }}
+            SUPERCRONIC_VERSION=${{ env.SUPERCRONIC_VERSION }}
+          tags: ${{ env.TEMP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php-version }}-arm64-${{ github.run_id }}
+
+  publish:
+    needs: [build-amd64, build-arm64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create and push multi-arch image for PHP 8.2
+        run: |
+          docker buildx imagetools create -t ${{ env.FINAL_REGISTRY }}/${{ env.IMAGE_NAME }}:8.2 \
+            ${{ env.TEMP_REGISTRY }}/${{ env.IMAGE_NAME }}:8.2-amd64-${{ github.run_id }} \
+            ${{ env.TEMP_REGISTRY }}/${{ env.IMAGE_NAME }}:8.2-arm64-${{ github.run_id }}
+
+      - name: Create and push multi-arch image for PHP 8.3
+        run: |
+          docker buildx imagetools create -t ${{ env.FINAL_REGISTRY }}/${{ env.IMAGE_NAME }}:8.3 \
+            ${{ env.TEMP_REGISTRY }}/${{ env.IMAGE_NAME }}:8.3-amd64-${{ github.run_id }} \
+            ${{ env.TEMP_REGISTRY }}/${{ env.IMAGE_NAME }}:8.3-arm64-${{ github.run_id }}
+
+      - name: Create and push multi-arch image for PHP 8.4
+        run: |
+          docker buildx imagetools create -t ${{ env.FINAL_REGISTRY }}/${{ env.IMAGE_NAME }}:8.4 \
+            ${{ env.TEMP_REGISTRY }}/${{ env.IMAGE_NAME }}:8.4-amd64-${{ github.run_id }} \
+            ${{ env.TEMP_REGISTRY }}/${{ env.IMAGE_NAME }}:8.4-arm64-${{ github.run_id }}
+
+      - name: Set latest tag
+        run: |
+          docker buildx imagetools create -t ${{ env.FINAL_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            ${{ env.FINAL_REGISTRY }}/${{ env.IMAGE_NAME }}:8.4

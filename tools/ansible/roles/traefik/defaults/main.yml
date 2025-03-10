@@ -1,0 +1,8 @@
+---
+traefik_dir: "/home/{{ config.raspberry.user }}/traefik"
+traefik_config_dir: "{{ traefik_dir }}/config"
+traefik_logs_dir: "{{ traefik_dir }}/logs"
+traefik_network_name: "web"
+traefik_dashboard_host: "{{ config.raspberry.hostname }}"
+traefik_basicauth_user: "user"
+traefik_basicauth_password_hash: "$2y$05$8zbpsdxg9wDiiKdqxiB0zeAlxZtG68P1SDBOvCN4IooLFewLx70Gm"  # "123456"

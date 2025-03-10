@@ -1,0 +1,30 @@
+x-base:
+    depends_on:
+        mariadb:
+            condition: service_healthy
+
+mariadb:
+    image: mariadb:11.4
+    healthcheck:
+        test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+        start_period: 10s
+        interval: 10s
+        timeout: 5s
+        retries: 3
+    environment:
+          MARIADB_RANDOM_ROOT_PASSWORD: "1"
+          MARIADB_DATABASE: "${DB_DATABASE}"
+          MARIADB_USER: "${DB_USERNAME}"
+          MARIADB_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+        - mariadb_data:/var/lib/mysql
+        - mariadb_custom_conf:/etc/mysql/conf.d
+        - mariadb_shared:/shared
+    __BASE_NETWORKS__: true
+    restart: always
+    __LOGGING_REFERENCE__: true
+
+volumes:
+    mariadb_data:
+    mariadb_custom_conf:
+    mariadb_shared:

@@ -1,0 +1,33 @@
+---
+- name: Create traefik network
+  community.docker.docker_network:
+    name: "{{ traefik_network_name }}"
+    state: present
+
+- name: Setup Traefik directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ config.raspberry.user }}"
+    group: "{{ config.raspberry.user }}"
+    mode: '0755'
+  loop:
+    - "{{ traefik_dir }}"
+    - "{{ traefik_config_dir }}"
+    - "{{ traefik_logs_dir }}"
+
+- name: Deploy Traefik configuration files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ config.raspberry.user }}"
+    group: "{{ config.raspberry.user }}"
+    mode: '0644'
+  loop:
+    - { src: "traefik.yaml.j2", dest: "{{ traefik_config_dir }}/traefik.yaml" }
+    - { src: "compose.yaml.j2", dest: "{{ traefik_dir }}/compose.yaml" }
+
+- name: Deploy and start Traefik container
+  community.docker.docker_compose_v2:
+    project_src: "{{ traefik_dir }}"
+    state: present

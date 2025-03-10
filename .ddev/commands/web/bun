@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run bun in the web container
+## Usage: bun
+## Example: "ddev bun"
+## ExecRaw: true
+## HostWorkingDir: true
+
+bun "$@"

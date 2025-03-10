@@ -1,0 +1,30 @@
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: WARN
+  format: common
+  filePath: /var/log/traefik/traefik.log
+
+api:
+  dashboard: true
+
+accesslog:
+  format: common
+  filePath: /var/log/traefik/access.log
+
+entryPoints:
+  web:
+    address: :80
+    asDefault: true
+    forwardedHeaders:
+      insecure: true
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: web
+  file:
+    directory: /etc/traefik
+    watch: true

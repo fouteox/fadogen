@@ -1,0 +1,9 @@
+name: bun
+repository: fouteox/ddev-bun
+version: 0.0.1
+install_date: "2025-02-10T13:17:41+01:00"
+project_files:
+    - commands/web/bun
+    - web-build/Dockerfile.bun
+global_files: []
+removal_actions: []

@@ -1,0 +1,9 @@
+name: vite
+repository: fouteox/ddev-vite
+version: 0.0.2
+install_date: "2025-02-27T18:55:06+01:00"
+project_files:
+    - config.vite.yaml
+    - vite/
+global_files: []
+removal_actions: []
