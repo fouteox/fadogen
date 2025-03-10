@@ -169,6 +169,7 @@ services:
     volumes:
       - 'stack-pgadmin:/var/lib/pgadmin'
     networks:
+      - internal
       - traefik
     restart: always
     logging: *default-logging
@@ -192,7 +193,9 @@ services:
       MINIO_ROOT_PASSWORD: '${MINIO_ROOT_PASSWORD}'
     volumes:
       - 'stack-minio:/data/minio'
-    networks: *default-network
+    networks:
+      - internal
+      - traefik
     command: 'minio server /data/minio --console-address ":8900"'
     restart: always
     logging: *default-logging
