@@ -1,3 +1,4 @@
+import DiscordLink from '@/components/discord-link';
 import GithubLink from '@/components/github-link';
 import LanguageSwitcher from '@/components/language-switcher';
 import SwitchThemeButton from '@/components/switch-theme-button';
@@ -27,7 +28,6 @@ import { usePage } from '@inertiajs/react';
 import { LogOut, User } from 'lucide-react';
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
-import DiscordLink from "@/components/discord-link";
 
 const navItems = [
     { label: 'Home', url: route('welcome', {}, false) },
