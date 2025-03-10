@@ -94,7 +94,7 @@ final class DeploymentService
         if (! $octane) {
             $supervisor = str_replace(
                 'command = php %(ENV_ROOT)s/artisan octane:frankenphp --port=8000 --admin-port=2019 --caddyfile=%(ENV_ROOT)s/deployment/Caddyfile',
-                'command = frankenphp run --config /etc/caddy/Caddyfile',
+                'command = frankenphp run --config %(ENV_ROOT)s/deployment/Caddyfile',
                 $supervisor
             );
         }
