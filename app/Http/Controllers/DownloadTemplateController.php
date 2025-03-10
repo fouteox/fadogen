@@ -32,8 +32,8 @@ final class DownloadTemplateController extends Controller
 
         Storage::delete($template->id.'.tar');
 
-        $template->status = TemplateStatusEnum::Downloaded;
-        $template->save();
+//        $template->status = TemplateStatusEnum::Downloaded;
+//        $template->save();
 
         return response()->streamDownload(function () use ($archiveContent) {
             echo $archiveContent;
