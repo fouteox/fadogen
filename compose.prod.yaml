@@ -171,13 +171,13 @@ services:
     labels:
       traefik.enable: true
 
-      traefik.http.routers.minio-console.rule: Host(`localhost`) || Host(`gitlab.local`)
+      traefik.http.routers.minio-console.rule: Host(`localhost`)
       traefik.http.routers.minio-console.entryPoints: minio-console
       traefik.http.routers.minio-console.service: minio-console-service
       traefik.http.routers.minio-console.middlewares: "minio-auth,minio-retry"
       traefik.http.services.minio-console-service.loadbalancer.server.port: 8900
 
-      traefik.http.routers.minio.rule: Host(`${APP_HOST}`) || Host(`localhost`) || Host(`gitlab.local`)
+      traefik.http.routers.minio.rule: Host(`${APP_HOST}`) || Host(`localhost`)
       traefik.http.routers.minio.entryPoints: minio
       traefik.http.routers.minio.service: minio-service
       traefik.http.routers.minio.middlewares: "minio-retry,minio-compress"
