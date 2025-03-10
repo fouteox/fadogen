@@ -29,9 +29,8 @@ final class Template extends Model
 
     public function getDownloadUrl(): string
     {
-        return URL::temporarySignedRoute(
+        return URL::signedRoute(
             'templates.download',
-            now()->addHours(15),
             ['template' => $this->id]
         );
     }
