@@ -154,6 +154,34 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
+  pgadmin:
+    profiles: [ administration ]
+    image: 'dpage/pgadmin4:latest'
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: '${PGADMIN_DEFAULT_EMAIL}'
+      PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD}'
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'True'
+    volumes:
+      - 'stack-pgadmin:/var/lib/pgadmin'
+    networks:
+      - traefik
+    restart: always
+    logging: *default-logging
+    labels:
+      traefik.enable: true
+      traefik.http.routers.pgadmin.rule: Host(`APP_LOCALHOST`)
+      traefik.http.routers.pgadmin.entryPoints: pgadmin
+      traefik.http.routers.pgadmin.middlewares: "pgadmin-auth,pgadmin-retry"
+      traefik.http.middlewares.pgadmin-retry.retry.attempts: 4
+      traefik.http.middlewares.pgadmin-retry.retry.initialinterval: 100ms
+      traefik.http.middlewares.pgadmin-auth.basicauth.removeheader: true
+      traefik.http.middlewares.pgadmin-auth.basicauth.users: "user:$$2y$$05$$8zbpsdxg9wDiiKdqxiB0zeAlxZtG68P1SDBOvCN4IooLFewLx70Gm" # user:123456
+
   minio:
     profiles: [app]
     image: 'minio/minio:latest'
@@ -171,13 +199,13 @@ services:
     labels:
       traefik.enable: true
 
-      traefik.http.routers.minio-console.rule: Host(`localhost`)
+      traefik.http.routers.minio-console.rule: Host(`APP_LOCALHOST`)
       traefik.http.routers.minio-console.entryPoints: minio-console
       traefik.http.routers.minio-console.service: minio-console-service
       traefik.http.routers.minio-console.middlewares: "minio-auth,minio-retry"
       traefik.http.services.minio-console-service.loadbalancer.server.port: 8900
 
-      traefik.http.routers.minio.rule: Host(`${APP_HOST}`) || Host(`localhost`)
+      traefik.http.routers.minio.rule: Host(`APP_LOCALHOST`)
       traefik.http.routers.minio.entryPoints: minio
       traefik.http.routers.minio.service: minio-service
       traefik.http.routers.minio.middlewares: "minio-retry,minio-compress"
