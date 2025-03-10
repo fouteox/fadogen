@@ -231,6 +231,7 @@ volumes:
   app_logs:
   app_cache:
   stack-pgsql:
+  stack-pgadmin:
   stack-valkey:
   stack-minio:
 
