@@ -27,6 +27,7 @@ import { usePage } from '@inertiajs/react';
 import { LogOut, User } from 'lucide-react';
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
+import DiscordLink from "@/components/discord-link";
 
 const navItems = [
     { label: 'Home', url: route('welcome', {}, false) },
@@ -59,6 +60,8 @@ export default function BaseLayout({ children }: PropsWithChildren) {
                         <LanguageSwitcher />
 
                         <SwitchThemeButton />
+
+                        <DiscordLink />
 
                         <GithubLink />
 
