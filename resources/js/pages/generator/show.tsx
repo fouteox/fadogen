@@ -41,6 +41,7 @@ export default function Show({ template }: Props) {
     };
 
     useEffect(() => {
+        console.log(template.status);
         if (
             template.status === 'completed' ||
             template.status === 'downloaded' ||
@@ -105,93 +106,91 @@ export default function Show({ template }: Props) {
                         </motion.div>
                     )}
 
-                    {template.status === 'completed' ||
-                        (template.status === 'downloaded' &&
-                            template.download_command && (
+                    {(template.status === 'completed' ||
+                        template.status === 'downloaded') &&
+                        template.download_command && (
+                            <motion.div
+                                key="success"
+                                className="w-full max-w-3xl space-y-8"
+                                variants={fadeIn}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                            >
+                                <div className="space-y-4 text-center">
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{
+                                            type: 'spring',
+                                            bounce: 0.5,
+                                        }}
+                                    >
+                                        <div className="inline-block">
+                                            <Sparkles className="size-12" />
+                                        </div>
+                                    </motion.div>
+
+                                    <h3 className="text-2xl font-medium">
+                                        {t('Your template is ready!')}
+                                    </h3>
+                                    <Text>
+                                        {t(
+                                            'Copy and run the command below in a terminal to start your project.',
+                                        )}
+                                    </Text>
+                                </div>
+
                                 <motion.div
-                                    key="success"
-                                    className="w-full max-w-3xl space-y-8"
-                                    variants={fadeIn}
-                                    initial="initial"
-                                    animate="animate"
-                                    exit="exit"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.2 }}
                                 >
-                                    <div className="space-y-4 text-center">
-                                        <motion.div
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            transition={{
-                                                type: 'spring',
-                                                bounce: 0.5,
-                                            }}
-                                        >
-                                            <div className="inline-block">
-                                                <Sparkles className="size-12" />
-                                            </div>
-                                        </motion.div>
-
-                                        <h3 className="text-2xl font-medium">
-                                            {t('Your template is ready!')}
-                                        </h3>
-                                        <Text>
-                                            {t(
-                                                'Copy and run the command below in a terminal to start your project.',
-                                            )}
-                                        </Text>
-                                    </div>
-
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.2 }}
-                                    >
-                                        <AnimatedBorder>
-                                            <div className="relative flex items-center overflow-hidden rounded-lg bg-neutral-100 dark:bg-zinc-900">
-                                                <div className="grow px-6 py-4 text-center">
-                                                    <motion.span
-                                                        className="font-mono text-lg text-neutral-900 dark:text-neutral-100"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        transition={{
-                                                            delay: 0.4,
-                                                        }}
-                                                    >
-                                                        {
-                                                            template.download_command
-                                                        }
-                                                    </motion.span>
-                                                </div>
-                                                <motion.button
-                                                    onClick={copyToClipboard}
-                                                    className="p-4 text-neutral-600 transition-colors duration-200 hover:text-neutral-800 focus:outline-none dark:text-neutral-300 dark:hover:text-neutral-100"
-                                                    type="button"
-                                                    whileHover={{ scale: 1.1 }}
-                                                    whileTap={{ scale: 0.95 }}
+                                    <AnimatedBorder>
+                                        <div className="relative flex items-center overflow-hidden rounded-lg bg-neutral-100 dark:bg-zinc-900">
+                                            <div className="grow px-6 py-4 text-center">
+                                                <motion.span
+                                                    className="font-mono text-lg text-neutral-900 dark:text-neutral-100"
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    transition={{
+                                                        delay: 0.4,
+                                                    }}
                                                 >
-                                                    {copied ? (
-                                                        <Check className="h-6 w-6" />
-                                                    ) : (
-                                                        <Copy className="h-6 w-6" />
-                                                    )}
-                                                </motion.button>
+                                                    {template.download_command}
+                                                </motion.span>
                                             </div>
-                                        </AnimatedBorder>
-                                    </motion.div>
-
-                                    <motion.div
-                                        className="text-center text-sm text-zinc-600 dark:text-zinc-400"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 0.6 }}
-                                    >
-                                        <Text>
-                                            {t(
-                                                'This command will automatically configure your project with the settings you selected.',
-                                            )}
-                                        </Text>
-                                    </motion.div>
+                                            <motion.button
+                                                onClick={copyToClipboard}
+                                                className="p-4 text-neutral-600 transition-colors duration-200 hover:text-neutral-800 focus:outline-none dark:text-neutral-300 dark:hover:text-neutral-100"
+                                                type="button"
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                {copied ? (
+                                                    <Check className="h-6 w-6" />
+                                                ) : (
+                                                    <Copy className="h-6 w-6" />
+                                                )}
+                                            </motion.button>
+                                        </div>
+                                    </AnimatedBorder>
                                 </motion.div>
-                            ))}
+
+                                <motion.div
+                                    className="text-center text-sm text-zinc-600 dark:text-zinc-400"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.6 }}
+                                >
+                                    <Text>
+                                        {t(
+                                            'This command will automatically configure your project with the settings you selected.',
+                                        )}
+                                    </Text>
+                                </motion.div>
+                            </motion.div>
+                        )}
                 </AnimatePresence>
             </div>
         </>
