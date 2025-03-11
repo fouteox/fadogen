@@ -24,7 +24,7 @@ final class GeneratorController extends Controller
             'template' => [
                 'id' => $template->id,
                 'status' => $template->status,
-                'download_command' => $template->status === TemplateStatusEnum::Completed
+                'download_command' => $template->status === TemplateStatusEnum::Completed || $template->status === TemplateStatusEnum::Downloaded
                     ? 'sh -c "$(curl -fsSL '.route('init.template', ['template' => $template]).')"'
                     : null,
             ],

@@ -20,10 +20,6 @@ final class InitController extends Controller
 
     public function withTemplate(Template $template): Response
     {
-        if ($template->status !== TemplateStatusEnum::Completed) {
-            abort(404);
-        }
-
         return response()
             ->view('scripts.init', [
                 'template' => $template->data,
