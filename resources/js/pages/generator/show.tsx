@@ -41,7 +41,6 @@ export default function Show({ template }: Props) {
     };
 
     useEffect(() => {
-        console.log(template.status);
         if (
             template.status === 'completed' ||
             template.status === 'downloaded' ||
