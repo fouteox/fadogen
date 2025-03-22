@@ -176,28 +176,6 @@ const Welcome: React.FC = () => {
                     </div>
                 </section>
 
-                {/* Example Section */}
-                <section className="mb-16 rounded-lg bg-white p-8 ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10">
-                    <div className="mx-auto max-w-3xl text-center">
-                        <Subheading className="mb-4 text-xl font-medium sm:text-2xl">
-                            {t('See Fadogen in action')}
-                        </Subheading>
-                        <Text className="mb-6">
-                            {t(
-                                'Check out a real example of an application created with Fadogen. PingCRM is an open-source demo application that showcases the capabilities of Fadogen and Laravel.',
-                            )}
-                        </Text>
-                        <a
-                            href="https://pingcrm.fadogen.app"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center rounded-md bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-                        >
-                            {t('View Demo')}
-                        </a>
-                    </div>
-                </section>
-
                 {/* Deployment Section */}
                 <section className="mb-16 rounded-lg bg-blue-50 p-8 dark:bg-blue-900/20">
                     <div className="mx-auto max-w-3xl text-center">
