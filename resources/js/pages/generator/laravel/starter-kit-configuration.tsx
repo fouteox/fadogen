@@ -6,6 +6,7 @@ import {
     Label,
     Legend,
 } from '@/components/ui/fieldset';
+import { Input } from '@/components/ui/input';
 import { Radio, RadioField, RadioGroup } from '@/components/ui/radio';
 import { Select } from '@/components/ui/select';
 import { Switch, SwitchField } from '@/components/ui/switch';
@@ -65,6 +66,7 @@ export const StarterKitConfiguration = ({
                     <option value="react">React</option>
                     <option value="vue">Vue</option>
                     <option value="livewire">Livewire</option>
+                    <option value="custom">Custom</option>
                 </Select>
                 {errors.starter_kit && (
                     <ErrorMessage>{errors.starter_kit}</ErrorMessage>
@@ -72,28 +74,61 @@ export const StarterKitConfiguration = ({
             </Field>
 
             <AnimatePresence mode="wait">
-                {data.starter_kit !== 'none' && (
+                {data.starter_kit === 'custom' && (
                     <motion.div {...fadeInAnimation}>
-                        <Fieldset>
-                            <Legend>
-                                {t('laravel.authentication_provider')}
-                            </Legend>
-                            <RadioGroup
-                                value={data.workos}
-                                onChange={handleAuthChange}
-                            >
-                                <RadioField>
-                                    <Radio value="laravel" />
-                                    <Label>{t('laravel.laravel_auth')}</Label>
-                                </RadioField>
-                                <RadioField>
-                                    <Radio value="workos" />
-                                    <Label>{t('laravel.workos')}</Label>
-                                </RadioField>
-                            </RadioGroup>
-                        </Fieldset>
+                        <Field>
+                            <Label>
+                                {t('laravel.custom_starter_kit_name')}
+                            </Label>
+                            <Input
+                                name="custom_starter_kit"
+                                value={data.custom_starter_kit || ''}
+                                onChange={(e) =>
+                                    setData(
+                                        'custom_starter_kit',
+                                        e.target.value,
+                                    )
+                                }
+                                placeholder="vendor/package-name"
+                                required
+                                invalid={!!errors.custom_starter_kit}
+                            />
+                            {errors.custom_starter_kit && (
+                                <ErrorMessage>
+                                    {errors.custom_starter_kit}
+                                </ErrorMessage>
+                            )}
+                        </Field>
                     </motion.div>
                 )}
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+                {data.starter_kit !== 'none' &&
+                    data.starter_kit !== 'custom' && (
+                        <motion.div {...fadeInAnimation}>
+                            <Fieldset>
+                                <Legend>
+                                    {t('laravel.authentication_provider')}
+                                </Legend>
+                                <RadioGroup
+                                    value={data.workos}
+                                    onChange={handleAuthChange}
+                                >
+                                    <RadioField>
+                                        <Radio value="laravel" />
+                                        <Label>
+                                            {t('laravel.laravel_auth')}
+                                        </Label>
+                                    </RadioField>
+                                    <RadioField>
+                                        <Radio value="workos" />
+                                        <Label>{t('laravel.workos')}</Label>
+                                    </RadioField>
+                                </RadioGroup>
+                            </Fieldset>
+                        </motion.div>
+                    )}
             </AnimatePresence>
 
             <AnimatePresence mode="wait">

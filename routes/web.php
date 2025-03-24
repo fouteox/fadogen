@@ -9,6 +9,7 @@ use App\Http\Controllers\InitController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionsController;
 use App\Http\Controllers\WelcomeController;
+use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -37,7 +38,8 @@ Route::middleware(['throttle:60,1'])->group(function () {
 
     Route::get('/generator', [GeneratorController::class, 'index'])->name('generator.index');
     Route::get('/generator/{template}', [GeneratorController::class, 'show'])->name('generator.show');
-    Route::post('/generator', [GeneratorController::class, 'store'])->name('generator.store');
+    Route::post('/generator', [GeneratorController::class, 'store'])->name('generator.store')
+        ->middleware([HandlePrecognitiveRequests::class]);
 });
 
 Route::middleware('auth')->group(function () {

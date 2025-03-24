@@ -9,6 +9,7 @@ export const useLaravelForm = () => {
             php_version: '8.4',
             database: 'sqlite',
             starter_kit: 'none',
+            custom_starter_kit: '',
             workos: undefined,
             testing_framework: 'pest',
             livewire_volt: undefined,
@@ -22,9 +23,25 @@ export const useLaravelForm = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (data.workos) {
+            transform((data) => {
+                const transformedData = {
+                    ...data,
+                    workos: data.workos === 'workos',
+                };
+
+                if (data.starter_kit !== 'custom') {
+                    transformedData.custom_starter_kit = '';
+                }
+
+                return transformedData;
+            });
+        } else {
             transform((data) => ({
                 ...data,
-                workos: data.workos === 'workos',
+                custom_starter_kit:
+                    data.starter_kit === 'custom'
+                        ? data.custom_starter_kit
+                        : '',
             }));
         }
         post(route('generator.store'));
@@ -50,9 +67,18 @@ export const useLaravelForm = () => {
 
     const handleStackChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value as Stack;
+        const previousValue = data.starter_kit;
         setData('starter_kit', value);
 
+        if (previousValue === 'custom' && value !== 'custom') {
+            setData('custom_starter_kit', '');
+        }
+
         if (value === 'none') {
+            setData('workos', undefined);
+            setData('livewire_volt', undefined);
+            setData('custom_starter_kit', '');
+        } else if (value === 'custom') {
             setData('workos', undefined);
             setData('livewire_volt', undefined);
         } else {
@@ -65,6 +91,8 @@ export const useLaravelForm = () => {
             } else {
                 setData('livewire_volt', undefined);
             }
+
+            setData('custom_starter_kit', '');
         }
     };
 

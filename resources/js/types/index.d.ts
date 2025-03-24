@@ -21,7 +21,7 @@ export type PageProps<
 
 export type FormErrors<T> = Partial<Record<keyof T, string>>;
 
-export type Stack = 'none' | 'react' | 'vue' | 'livewire';
+export type Stack = 'none' | 'react' | 'vue' | 'livewire' | 'custom';
 
 export type QueueDriverValue = 'valkey' | 'redis' | 'database';
 export type QueueTypeValue = 'horizon' | 'native';
@@ -48,7 +48,8 @@ export interface FormValues {
     project_name: string;
     php_version: PhpVersion;
     database: DatabaseType;
-    starter_kit: 'none' | 'react' | 'vue' | 'livewire';
+    starter_kit: Stack;
+    custom_starter_kit?: string;
     livewire_volt?: boolean;
     workos: AuthProvider | undefined;
     testing_framework: TestingFramework;
