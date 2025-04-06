@@ -4,10 +4,9 @@ import clsx from 'clsx';
 export function RadioGroup({
     className,
     ...props
-}: { className?: string } & Omit<
-    Headless.RadioGroupProps,
-    'as' | 'className'
->) {
+}: {
+    className?: string;
+} & Omit<Headless.RadioGroupProps, 'as' | 'className'>) {
     return (
         <Headless.RadioGroup
             data-slot="control"
@@ -114,22 +113,27 @@ type Color = keyof typeof colors;
 
 export function Radio({
     color = 'dark/zinc',
+    isAutoDetected,
     className,
     ...props
-}: { color?: Color; className?: string } & Omit<
-    Headless.RadioProps,
-    'as' | 'className' | 'children'
->) {
+}: {
+    color?: Color;
+    isAutoDetected?: boolean;
+    className?: string;
+} & Omit<Headless.RadioProps, 'as' | 'className' | 'children'>) {
+    const effectiveColor = isAutoDetected ? 'blue' : color;
+
     return (
         <Headless.Radio
             data-slot="control"
+            data-auto-detected={isAutoDetected || undefined}
             {...props}
             className={clsx(
                 className,
                 'group inline-flex focus:outline-hidden',
             )}
         >
-            <span className={clsx([base, colors[color]])}>
+            <span className={clsx([base, colors[effectiveColor]])}>
                 <span
                     className={clsx(
                         'size-full rounded-full border-[4.5px] border-transparent bg-(--radio-indicator) bg-clip-padding',
