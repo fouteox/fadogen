@@ -32,7 +32,7 @@ import { useTranslation } from 'react-i18next';
 const navItems = [
     { label: 'Home', url: route('welcome', {}, false) },
     { label: 'Generate', url: route('generator.index', {}, false) },
-    { label: 'Deploy', url: route('deploy', {}, false) },
+    // { label: 'Deploy', url: route('deploy', {}, false) },
 ];
 
 export default function BaseLayout({ children }: PropsWithChildren) {
