@@ -7,18 +7,29 @@ import {
     QueueHandlers,
     QueueTypeValue,
     SelectChangeEvent,
+    SetDataMethod,
 } from '@/types';
+import clsx from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 
-type QueueDriverSelectorProps = Omit<BaseFormSectionProps, 'errors'> & {
+interface QueueConfigurationProps extends BaseFormSectionProps, QueueHandlers {
+    modifiedFields?: string[];
+}
+
+// Type corrigé pour QueueDriverSelectorProps
+type QueueDriverSelectorProps = {
+    data: BaseFormSectionProps['data'];
+    setData: SetDataMethod;
     queueType: QueueTypeValue;
+    modifiedFields?: string[];
 };
 
 const QueueDriverSelector = ({
     data,
     setData,
     queueType,
+    modifiedFields = [],
 }: QueueDriverSelectorProps) => {
     const { t } = useTranslation();
 
@@ -26,13 +37,24 @@ const QueueDriverSelector = ({
         setData('queue_driver', e.target.value as QueueDriverValue);
     };
 
+    // Vérifier si un champ a été modifié automatiquement
+    const isFieldAutoDetected = (field: string): boolean => {
+        return modifiedFields.includes(field);
+    };
+
     return (
         <Field>
-            <Label>{t('laravel.queue_driver')}</Label>
+            <div className="flex items-center justify-between">
+                <Label>{t('laravel.queue_driver')}</Label>
+            </div>
             <Select
                 name="queue_driver"
                 value={data.queue_driver ?? ''}
                 onChange={handleDriverChange}
+                className={clsx(
+                    isFieldAutoDetected('queue_driver') &&
+                        'border-blue-500 dark:border-blue-500',
+                )}
             >
                 <option value="valkey">Valkey ({t('Recommended')})</option>
                 <option value="redis">Redis</option>
@@ -44,29 +66,41 @@ const QueueDriverSelector = ({
     );
 };
 
-type QueueConfigurationProps = BaseFormSectionProps & QueueHandlers;
-
 export const QueueConfiguration = ({
     data,
     setData,
     errors,
     handleQueueChange,
+    modifiedFields = [],
 }: QueueConfigurationProps) => {
     const { t } = useTranslation();
 
     const currentQueueType = data.queue_type;
-    const showDriverSelector = currentQueueType && currentQueueType !== 'none';
+
+    // Correction de l'erreur TS2367 en vérifiant le type d'une manière différente
+    const showDriverSelector = !!currentQueueType; // currentQueueType est défini et non falsy
+
+    // Vérifier si un champ a été modifié automatiquement
+    const isFieldAutoDetected = (field: string): boolean => {
+        return modifiedFields.includes(field);
+    };
 
     return (
         <>
             <Field>
-                <Label>{t('laravel.queue_service')}</Label>
+                <div className="flex items-center justify-between">
+                    <Label>{t('laravel.queue_service')}</Label>
+                </div>
                 <Select
                     name="queue_type"
                     value={currentQueueType ?? 'none'}
                     onChange={handleQueueChange}
                     required
                     invalid={!!errors.queue_type}
+                    className={clsx(
+                        isFieldAutoDetected('queue_type') &&
+                            'border-blue-500 dark:border-blue-500',
+                    )}
                 >
                     <option value="none">{t('None')}</option>
                     <option value="horizon">
@@ -86,6 +120,7 @@ export const QueueConfiguration = ({
                             data={data}
                             setData={setData}
                             queueType={currentQueueType}
+                            modifiedFields={modifiedFields}
                         />
                     </motion.div>
                 )}

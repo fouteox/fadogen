@@ -1,36 +1,53 @@
 import {
+    Description,
     ErrorMessage,
     Field,
     FieldGroup,
     Fieldset,
+    FieldsetInfoMessage,
+    InfoMessage,
     Label,
     Legend,
 } from '@/components/ui/fieldset';
+import { Input } from '@/components/ui/input';
 import { Radio, RadioField, RadioGroup } from '@/components/ui/radio';
 import { Select } from '@/components/ui/select';
 import { Switch, SwitchField } from '@/components/ui/switch';
 import { fadeInAnimation } from '@/constants/animations';
 import {
     AuthProvider,
-    BaseFormSectionProps,
+    LaravelFormHook,
     PackageManager,
+    SetDataMethod,
     TestingFramework,
 } from '@/types';
 import { AnimatePresence, motion } from 'motion/react';
-import { ChangeEvent } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-interface StarterKitConfigurationProps extends BaseFormSectionProps {
-    handleStackChange: (e: ChangeEvent<HTMLSelectElement>) => void;
+interface StarterKitConfigurationProps {
+    data: LaravelFormHook['data'];
+    setData: SetDataMethod;
+    errors: LaravelFormHook['errors'];
+    validating?: LaravelFormHook['validating'];
+    modifiedFields?: string[];
+    handleStackChange: LaravelFormHook['handleStackChange'];
+    detectDependencies?: LaravelFormHook['detectDependencies'];
 }
 
 export const StarterKitConfiguration = ({
     data,
     setData,
     errors,
+    modifiedFields = [],
     handleStackChange,
+    detectDependencies,
 }: StarterKitConfigurationProps) => {
     const { t } = useTranslation();
+    const [isPackageLoading, setIsPackageLoading] = useState(false);
+    const lastCheckedPackageRef = useRef<string | undefined>(
+        data.custom_starter_kit,
+    );
 
     const handleTestingFrameworkChange = (value: string) => {
         setData('testing_framework', value as TestingFramework);
@@ -48,6 +65,50 @@ export const StarterKitConfiguration = ({
         }
     };
 
+    const handleCustomPackageChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const packageName = e.target.value;
+        setData('custom_starter_kit', packageName);
+    };
+
+    const handlePackageBlur = async () => {
+        // Validation à la perte de focus
+        if (typeof setData.validate === 'function') {
+            setData.validate('custom_starter_kit');
+        }
+
+        // Vérifier si la valeur a changé depuis la dernière vérification
+        const currentPackage = data.custom_starter_kit;
+        if (
+            currentPackage === lastCheckedPackageRef.current ||
+            !currentPackage ||
+            currentPackage.trim() === ''
+        ) {
+            return; // Ne rien faire si la valeur n'a pas changé ou est vide
+        }
+
+        // Déclencher la détection des dépendances seulement si:
+        // 1. Le starter_kit est 'custom'
+        // 2. Un nom de package a été entré
+        // 3. La fonction detectDependencies existe
+        if (data.starter_kit === 'custom' && detectDependencies) {
+            setIsPackageLoading(true);
+            try {
+                await detectDependencies(currentPackage);
+                // Mettre à jour la référence après une détection réussie
+                lastCheckedPackageRef.current = currentPackage;
+            } finally {
+                setIsPackageLoading(false);
+            }
+        }
+    };
+
+    // Vérifier si un champ a été modifié automatiquement
+    const isFieldAutoDetected = (field: string): boolean => {
+        return modifiedFields.includes(field);
+    };
+
     return (
         <FieldGroup>
             <Field>
@@ -56,6 +117,11 @@ export const StarterKitConfiguration = ({
                     name="starter_kit"
                     value={data.starter_kit}
                     onChange={handleStackChange}
+                    onBlur={() => {
+                        if (typeof setData.validate === 'function') {
+                            setData.validate('starter_kit');
+                        }
+                    }}
                     required
                     invalid={!!errors.starter_kit}
                 >
@@ -65,6 +131,7 @@ export const StarterKitConfiguration = ({
                     <option value="react">React</option>
                     <option value="vue">Vue</option>
                     <option value="livewire">Livewire</option>
+                    <option value="custom">Custom</option>
                 </Select>
                 {errors.starter_kit && (
                     <ErrorMessage>{errors.starter_kit}</ErrorMessage>
@@ -72,28 +139,61 @@ export const StarterKitConfiguration = ({
             </Field>
 
             <AnimatePresence mode="wait">
-                {data.starter_kit !== 'none' && (
+                {data.starter_kit === 'custom' && (
                     <motion.div {...fadeInAnimation}>
-                        <Fieldset>
-                            <Legend>
-                                {t('laravel.authentication_provider')}
-                            </Legend>
-                            <RadioGroup
-                                value={data.workos}
-                                onChange={handleAuthChange}
-                            >
-                                <RadioField>
-                                    <Radio value="laravel" />
-                                    <Label>{t('laravel.laravel_auth')}</Label>
-                                </RadioField>
-                                <RadioField>
-                                    <Radio value="workos" />
-                                    <Label>{t('laravel.workos')}</Label>
-                                </RadioField>
-                            </RadioGroup>
-                        </Fieldset>
+                        <Field>
+                            <Label>{t('Name of the starter kit')}</Label>
+                            <Description>
+                                {t(
+                                    'An automatic detection of the starter kit will be carried out and the various questions will be filled in automatically.',
+                                )}
+                            </Description>
+                            <Input
+                                name="custom_starter_kit"
+                                isLoading={isPackageLoading}
+                                value={data.custom_starter_kit || ''}
+                                onChange={handleCustomPackageChange}
+                                onBlur={handlePackageBlur}
+                                placeholder="vendor/package-name"
+                                required
+                                invalid={!!errors.custom_starter_kit}
+                            />
+                            {errors.custom_starter_kit && (
+                                <ErrorMessage>
+                                    {errors.custom_starter_kit}
+                                </ErrorMessage>
+                            )}
+                        </Field>
                     </motion.div>
                 )}
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+                {data.starter_kit !== 'none' &&
+                    data.starter_kit !== 'custom' && (
+                        <motion.div {...fadeInAnimation}>
+                            <Fieldset>
+                                <Legend>
+                                    {t('laravel.authentication_provider')}
+                                </Legend>
+                                <RadioGroup
+                                    value={data.workos}
+                                    onChange={handleAuthChange}
+                                >
+                                    <RadioField>
+                                        <Radio value="laravel" />
+                                        <Label>
+                                            {t('laravel.laravel_auth')}
+                                        </Label>
+                                    </RadioField>
+                                    <RadioField>
+                                        <Radio value="workos" />
+                                        <Label>{t('laravel.workos')}</Label>
+                                    </RadioField>
+                                </RadioGroup>
+                            </Fieldset>
+                        </motion.div>
+                    )}
             </AnimatePresence>
 
             <AnimatePresence mode="wait">
@@ -123,14 +223,29 @@ export const StarterKitConfiguration = ({
                     onChange={handleTestingFrameworkChange}
                 >
                     <RadioField>
-                        <Radio value="pest" />
+                        <Radio
+                            value="pest"
+                            isAutoDetected={isFieldAutoDetected(
+                                'testing_framework',
+                            )}
+                        />
                         <Label>Pest</Label>
                     </RadioField>
                     <RadioField>
-                        <Radio value="phpunit" />
+                        <Radio
+                            value="phpunit"
+                            isAutoDetected={isFieldAutoDetected(
+                                'testing_framework',
+                            )}
+                        />
                         <Label>PHPUnit</Label>
                     </RadioField>
                 </RadioGroup>
+                {isFieldAutoDetected('testing_framework') && (
+                    <FieldsetInfoMessage>
+                        {t('Auto-detected value')}
+                    </FieldsetInfoMessage>
+                )}
             </Fieldset>
 
             <Field>
@@ -144,10 +259,16 @@ export const StarterKitConfiguration = ({
                             e.target.value as PackageManager,
                         )
                     }
+                    isAutoDetected={isFieldAutoDetected(
+                        'javascript_package_manager',
+                    )}
                 >
                     <option value="npm">npm</option>
                     <option value="bun">bun</option>
                 </Select>
+                {isFieldAutoDetected('javascript_package_manager') && (
+                    <InfoMessage>{t('Auto-detected value')}</InfoMessage>
+                )}
                 {errors.javascript_package_manager && (
                     <ErrorMessage>
                         {errors.javascript_package_manager}

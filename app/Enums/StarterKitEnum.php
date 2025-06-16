@@ -10,4 +10,5 @@ enum StarterKitEnum: string
     case React = 'react';
     case Vue = 'vue';
     case Livewire = 'livewire';
+    case Custom = 'custom';
 }

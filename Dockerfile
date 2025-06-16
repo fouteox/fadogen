@@ -1,5 +1,5 @@
 ARG PHP_VERSION=8.4
-ARG BUN_VERSION=1.2.4
+ARG BUN_VERSION=1.2.16
 
 FROM fouteox/laravel-php-base:${PHP_VERSION} AS base
 

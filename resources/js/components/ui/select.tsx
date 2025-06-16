@@ -6,8 +6,12 @@ export const Select = forwardRef(function Select(
     {
         className,
         multiple,
+        isAutoDetected,
         ...props
-    }: { className?: string } & Omit<Headless.SelectProps, 'as' | 'className'>,
+    }: {
+        className?: string;
+        isAutoDetected?: boolean;
+    } & Omit<Headless.SelectProps, 'as' | 'className'>,
     ref: React.ForwardedRef<HTMLSelectElement>,
 ) {
     return (
@@ -30,6 +34,7 @@ export const Select = forwardRef(function Select(
             <Headless.Select
                 ref={ref}
                 multiple={multiple}
+                data-auto-detected={isAutoDetected || undefined}
                 {...props}
                 className={clsx([
                     // Basic layout
@@ -44,6 +49,8 @@ export const Select = forwardRef(function Select(
                     'text-base/6 text-zinc-950 placeholder:text-zinc-500 sm:text-sm/6 dark:text-white dark:*:text-white',
                     // Border
                     'border border-zinc-950/10 data-hover:border-zinc-950/20 dark:border-white/10 dark:data-hover:border-white/20',
+                    // Auto-detected state
+                    'data-[auto-detected]:border-blue-700/90 data-[auto-detected]:data-hover:border-blue-600 dark:data-[auto-detected]:border-blue-700/90 dark:data-[auto-detected]:data-hover:border-blue-600',
                     // Background color
                     'bg-transparent dark:bg-white/5 dark:*:bg-zinc-800',
                     // Hide default focus styles

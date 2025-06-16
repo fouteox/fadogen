@@ -12,6 +12,8 @@ use App\Enums\QueueDriverEnum;
 use App\Enums\QueueTypeEnum;
 use App\Enums\StarterKitEnum;
 use App\Enums\TestingFrameworkEnum;
+use Exception;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\MergeValidationRules;
 use Spatie\LaravelData\Attributes\Validation\Max;
@@ -30,6 +32,8 @@ final class ProjectConfigurationData extends Data
         public DatabaseEnum $database,
 
         public StarterKitEnum $starter_kit,
+
+        public ?string $custom_starter_kit,
 
         public ?bool $livewire_volt,
 
@@ -53,6 +57,24 @@ final class ProjectConfigurationData extends Data
     {
         return [
             'features.*' => [Rule::enum(FeaturesEnum::class)],
+            'custom_starter_kit' => [
+                Rule::when(
+                    request()->input('starter_kit') === StarterKitEnum::Custom->value,
+                    ['required', 'string', 'max:255', function ($attribute, $value, $fail) {
+                        if (!empty($value)) {
+                            try {
+                                $response = Http::get("https://packagist.org/packages/$value.json");
+                                if (!$response->successful()) {
+                                    $fail("Le package '$value' n'existe pas sur Packagist.org.");
+                                }
+                            } catch (Exception $e) {
+                                $fail("Erreur lors de la vérification du package sur Packagist.org: {$e->getMessage()}");
+                            }
+                        }
+                    }],
+                    ['nullable', 'string', 'max:255']
+                ),
+            ],
             'queue_driver' => [
                 Rule::when(
                     request()->input('queue_type') === QueueTypeEnum::Horizon->value,
@@ -72,8 +94,9 @@ final class ProjectConfigurationData extends Data
             ],
             'workos' => [
                 function ($attribute, $value, $fail) {
-                    if ($value === true && request()->input('starter_kit') === StarterKitEnum::None->value) {
-                        $fail("Le champ $attribute ne peut pas être activé lorsque le starter kit est défini sur 'none'.");
+                    $starter_kit = request()->input('starter_kit');
+                    if ($value === true && ($starter_kit === StarterKitEnum::None->value || $starter_kit === StarterKitEnum::Custom->value)) {
+                        $fail("Le champ $attribute ne peut pas être activé lorsque le starter kit est défini sur 'none' ou 'custom'.");
                     }
                 },
             ],

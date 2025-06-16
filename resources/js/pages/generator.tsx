@@ -9,7 +9,9 @@ import { BasicInformation } from '@/pages/generator/laravel/basic-information';
 import { OptionalFeatures } from '@/pages/generator/laravel/optional-features';
 import { QueueConfiguration } from '@/pages/generator/laravel/queue-configuration';
 import { StarterKitConfiguration } from '@/pages/generator/laravel/starter-kit-configuration';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Toaster } from 'sonner';
 
 export default function Generator() {
     const { t } = useTranslation();
@@ -18,20 +20,49 @@ export default function Generator() {
         data,
         setData,
         processing,
+        validating,
         errors,
+        isLoading,
+        modifiedFields,
         handleSubmit,
         handleStackChange,
         handleQueueChange,
         handleFeatureChange,
+        validate,
+        detectDependencies,
     } = useLaravelForm();
+
+    const validateAllFields = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        validate({
+            only: [
+                'project_name',
+                'php_version',
+                'database',
+                'starter_kit',
+                'custom_starter_kit',
+                'testing_framework',
+            ],
+            onSuccess: () => {
+                handleSubmit(e);
+            },
+        });
+    };
 
     return (
         <>
             <AppHead title={t('Generator')} />
+            <Toaster
+                position="top-right"
+                richColors
+                closeButton
+                duration={5000}
+            />
 
             <Divider className="my-10 mt-6" />
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={validateAllFields}>
                 <section className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
                     <div className="space-y-1">
                         <Subheading>
@@ -48,6 +79,8 @@ export default function Generator() {
                         data={data}
                         setData={setData}
                         errors={errors}
+                        validating={validating}
+                        modifiedFields={modifiedFields}
                     />
                 </section>
 
@@ -67,7 +100,10 @@ export default function Generator() {
                         data={data}
                         setData={setData}
                         errors={errors}
+                        validating={validating}
+                        modifiedFields={modifiedFields}
                         handleStackChange={handleStackChange}
+                        detectDependencies={detectDependencies}
                     />
                 </section>
 
@@ -88,19 +124,37 @@ export default function Generator() {
                             data={data}
                             setData={setData}
                             errors={errors}
+                            validating={validating}
+                            modifiedFields={modifiedFields}
                             handleQueueChange={handleQueueChange}
                         />
 
                         <OptionalFeatures
                             data={data}
                             handleFeatureChange={handleFeatureChange}
+                            modifiedFields={modifiedFields}
                         />
                     </FieldGroup>
                 </section>
 
                 <div className="mt-8 flex items-center justify-end gap-4">
-                    <Button type="submit" disabled={processing}>
-                        {t('Generate project')}
+                    {isLoading && (
+                        <Text className="text-sm text-gray-500">
+                            {t('Analyse du package en cours...')}
+                        </Text>
+                    )}
+                    {validating && (
+                        <Text className="text-sm text-gray-500">
+                            {t('Validation en cours...')}
+                        </Text>
+                    )}
+                    <Button
+                        type="submit"
+                        disabled={processing || validating || isLoading}
+                    >
+                        {processing
+                            ? t('Génération...')
+                            : t('Generate project')}
                     </Button>
                 </div>
             </form>

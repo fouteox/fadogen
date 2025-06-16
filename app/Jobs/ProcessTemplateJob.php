@@ -148,13 +148,16 @@ final class ProcessTemplateJob implements ShouldQueue
 
         if ($starterKitType === StarterKitEnum::None->value) {
             $this->commands[] = 'ddev composer create-project "laravel/laravel:^12" --remove-vcs --prefer-dist --no-scripts';
-        } else {
+        } elseif($starterKitType === StarterKitEnum::Custom->value) {
+            $this->commands[] = "ddev composer create-project {$config['custom_starter_kit']} --stability=dev --remove-vcs --prefer-dist --no-scripts";
+        }
+        else {
             if ($config['workos']) {
-                $this->commands[] = "ddev composer create-project laravel/$starterKitType-starter-kit:dev-workos --remove-vcs --prefer-dist --no-scripts";
+                $this->commands[] = "ddev composer create-project laravel/$starterKitType-starter-kit:dev-workos --stability=dev --remove-vcs --prefer-dist --no-scripts";
             } elseif ($starterKitType === StarterKitEnum::Livewire->value && $config['livewire_volt']) {
-                $this->commands[] = "ddev composer create-project laravel/$starterKitType-starter-kit:dev-components --remove-vcs --prefer-dist --no-scripts";
+                $this->commands[] = "ddev composer create-project laravel/$starterKitType-starter-kit:dev-components --stability=dev --remove-vcs --prefer-dist --no-scripts";
             } else {
-                $this->commands[] = "ddev composer create-project laravel/$starterKitType-starter-kit --remove-vcs --prefer-dist --no-scripts";
+                $this->commands[] = "ddev composer create-project laravel/$starterKitType-starter-kit --stability=dev --remove-vcs --prefer-dist --no-scripts";
             }
         }
 
@@ -234,7 +237,7 @@ final class ProcessTemplateJob implements ShouldQueue
         }
 
         if (in_array(FeaturesEnum::Reverb->value, $config['features'])) {
-            $this->commands[] = 'ddev php artisan install:broadcasting --no-interaction';
+            $this->commands[] = 'ddev php artisan install:broadcasting --reverb --force --no-interaction';
 
             $this->commands[] = sprintf(
                 'ddev exec "perl -pi -e \'s#REVERB_HOST=\"localhost\"#REVERB_HOST=\"%s.ddev.site\"#; s#REVERB_SCHEME=http#REVERB_SCHEME=https#\' .env"',
