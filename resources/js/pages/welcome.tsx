@@ -177,25 +177,25 @@ const Welcome: React.FC = () => {
                 </section>
 
                 {/* Deployment Section */}
-                <section className="mb-16 rounded-lg bg-blue-50 p-8 dark:bg-blue-900/20">
-                    <div className="mx-auto max-w-3xl text-center">
-                        <Badge color="blue" className="mb-4">
-                            {t('New')}
-                        </Badge>
-                        <Subheading className="mb-4 text-xl font-medium sm:text-2xl">
-                            {t('Simplified Deployment')}
-                        </Subheading>
-                        <Text className="mb-6">
-                            {t(
-                                "Deploying your application is now as simple as initializing it. Use Fadogen's integrated deployment feature to get your application online in minutes, without complex configuration.",
-                            )}
-                        </Text>
-                        <Button color="blue" href={route('deploy')}>
-                            <Rocket className="h-5 w-5" data-slot="icon" />
-                            {t('Learn more')}
-                        </Button>
-                    </div>
-                </section>
+                {/*<section className="mb-16 rounded-lg bg-blue-50 p-8 dark:bg-blue-900/20">*/}
+                {/*    <div className="mx-auto max-w-3xl text-center">*/}
+                {/*        <Badge color="blue" className="mb-4">*/}
+                {/*            {t('New')}*/}
+                {/*        </Badge>*/}
+                {/*        <Subheading className="mb-4 text-xl font-medium sm:text-2xl">*/}
+                {/*            {t('Simplified Deployment')}*/}
+                {/*        </Subheading>*/}
+                {/*        <Text className="mb-6">*/}
+                {/*            {t(*/}
+                {/*                "Deploying your application is now as simple as initializing it. Use Fadogen's integrated deployment feature to get your application online in minutes, without complex configuration.",*/}
+                {/*            )}*/}
+                {/*        </Text>*/}
+                {/*        <Button color="blue" href={route('deploy')}>*/}
+                {/*            <Rocket className="h-5 w-5" data-slot="icon" />*/}
+                {/*            {t('Learn more')}*/}
+                {/*        </Button>*/}
+                {/*    </div>*/}
+                {/*</section>*/}
 
                 {/* Pricing Section */}
                 <section className="mb-16 rounded-lg bg-white p-8 ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10">
