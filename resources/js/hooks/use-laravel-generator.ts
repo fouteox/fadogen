@@ -1,109 +1,199 @@
-import { FormValues, QueueTypeValue, Stack } from '@/types';
-import { useForm } from '@inertiajs/react';
-import React from 'react';
+import {
+    AuthProvider,
+    DatabaseType,
+    DetectedDependencies,
+    FormValues,
+    PackageManager,
+    PhpVersion,
+    PrecognitionFormData,
+    QueueDriverValue,
+    QueueTypeValue,
+    Stack,
+    TestingFramework,
+} from '@/types';
+import axios, { AxiosResponse } from 'axios';
+import { useForm } from 'laravel-precognition-react-inertia';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 export const useLaravelForm = () => {
-    const { data, setData, post, processing, errors, transform } =
-        useForm<FormValues>('CreateTemplate', {
-            project_name: '',
-            php_version: '8.4',
-            database: 'sqlite',
-            starter_kit: 'none',
-            custom_starter_kit: '',
-            workos: undefined,
-            testing_framework: 'pest',
-            livewire_volt: undefined,
-            queue_type: undefined,
-            queue_driver: undefined,
-            features: [],
-            javascript_package_manager: 'npm',
-            initialize_git: true,
+    const { t } = useTranslation();
+    const [isLoading, setIsLoading] = useState(false);
+    const [modifiedFields, setModifiedFields] = useState<string[]>([]);
+
+    const form = useForm('post', route('generator.store'), {
+        project_name: '',
+        php_version: '8.4' as PhpVersion,
+        database: 'sqlite' as DatabaseType,
+        starter_kit: 'none' as Stack,
+        custom_starter_kit: '',
+        workos: undefined as AuthProvider | undefined,
+        testing_framework: 'pest' as TestingFramework,
+        livewire_volt: undefined as boolean | undefined,
+        queue_type: undefined as QueueTypeValue | undefined,
+        queue_driver: undefined as QueueDriverValue | undefined,
+        features: [] as string[],
+        javascript_package_manager: 'npm' as PackageManager,
+        initialize_git: true,
+    });
+
+    form.setValidationTimeout(500);
+
+    /**
+     * Dependency detection function
+     * Only triggered when starter_kit is 'custom' and custom_starter_kit is filled
+     */
+    const detectDependencies = async (customPackage: string): Promise<void> => {
+        if (!customPackage || customPackage.trim() === '') {
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            const response: AxiosResponse<{ detected: DetectedDependencies }> =
+                await axios.get(route('dependencies.detect'), {
+                    params: { package: customPackage },
+                });
+
+            const { detected } = response.data;
+
+            if (detected) {
+                const newModifiedFields: string[] = [];
+
+                Object.entries(detected).forEach(([key, value]) => {
+                    if (key !== 'notifications' && value !== undefined) {
+                        if (key in form.data) {
+                            const typedKey = key as keyof FormValues;
+                            const originalValue = (
+                                form.data as Record<string, unknown>
+                            )[typedKey];
+
+                            if (
+                                JSON.stringify(originalValue) !==
+                                JSON.stringify(value)
+                            ) {
+                                (
+                                    form.setData as (
+                                        key: string,
+                                        value: unknown,
+                                    ) => void
+                                )(String(typedKey), value);
+
+                                newModifiedFields.push(typedKey as string);
+                            }
+                        }
+                    }
+                });
+
+                setModifiedFields(newModifiedFields);
+
+                if (newModifiedFields.length > 0) {
+                    toast.info(
+                        t(
+                            'Some fields have been modified due to the selected custom package. Please carefully review the form.',
+                        ),
+                    );
+                } else {
+                    toast.info(
+                        t(
+                            'No specific configuration has been detected for this package.',
+                        ),
+                    );
+                }
+            }
+        } catch (error: unknown) {
+            console.error(error);
+
+            toast.error(t('An error has occurred.'));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSubmit = (e: React.FormEvent): void => {
+        e.preventDefault();
+
+        form.transform((data: PrecognitionFormData): PrecognitionFormData => {
+            const transformedData: PrecognitionFormData = { ...data };
+
+            if (transformedData.starter_kit !== 'custom') {
+                transformedData.custom_starter_kit = '';
+            }
+
+            return transformedData;
         });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (data.workos) {
-            transform((data) => {
-                const transformedData = {
-                    ...data,
-                    workos: data.workos === 'workos',
-                };
-
-                if (data.starter_kit !== 'custom') {
-                    transformedData.custom_starter_kit = '';
-                }
-
-                return transformedData;
-            });
-        } else {
-            transform((data) => ({
-                ...data,
-                custom_starter_kit:
-                    data.starter_kit === 'custom'
-                        ? data.custom_starter_kit
-                        : '',
-            }));
-        }
-        post(route('generator.store'));
+        form.submit();
     };
 
-    const handleQueueChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleQueueChange = (
+        e: React.ChangeEvent<HTMLSelectElement>,
+    ): void => {
         const value = e.target.value as QueueTypeValue | 'none';
         if (value === 'none') {
-            setData('queue_type', undefined);
-            setData('queue_driver', undefined);
+            form.setData('queue_type', undefined);
+            form.setData('queue_driver', undefined);
         } else {
-            setData('queue_type', value);
-            setData('queue_driver', 'valkey');
+            form.setData('queue_type', value);
+            form.setData('queue_driver', 'valkey');
         }
     };
 
-    const handleFeatureChange = (feature: string, checked: boolean) => {
+    const handleFeatureChange = (feature: string, checked: boolean): void => {
         const updatedFeatures = checked
-            ? [...data.features, feature]
-            : data.features.filter((f) => f !== feature);
-        setData('features', updatedFeatures);
+            ? [...form.data.features, feature]
+            : form.data.features.filter((f) => f !== feature);
+        form.setData('features', updatedFeatures);
     };
 
-    const handleStackChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleStackChange = (
+        e: React.ChangeEvent<HTMLSelectElement>,
+    ): void => {
         const value = e.target.value as Stack;
-        const previousValue = data.starter_kit;
-        setData('starter_kit', value);
+        const previousValue = form.data.starter_kit;
+        form.setData('starter_kit', value);
 
         if (previousValue === 'custom' && value !== 'custom') {
-            setData('custom_starter_kit', '');
+            form.setData('custom_starter_kit', '');
+            setModifiedFields([]);
         }
 
         if (value === 'none') {
-            setData('workos', undefined);
-            setData('livewire_volt', undefined);
-            setData('custom_starter_kit', '');
+            form.setData('workos', undefined);
+            form.setData('livewire_volt', undefined);
+            form.setData('custom_starter_kit', '');
         } else if (value === 'custom') {
-            setData('workos', undefined);
-            setData('livewire_volt', undefined);
+            form.setData('workos', undefined);
+            form.setData('livewire_volt', undefined);
         } else {
-            if (data.workos === undefined) {
-                setData('workos', 'laravel');
+            if (form.data.workos === undefined) {
+                form.setData('workos', 'laravel');
             }
 
             if (value === 'livewire') {
-                setData('livewire_volt', false);
+                form.setData('livewire_volt', false);
             } else {
-                setData('livewire_volt', undefined);
+                form.setData('livewire_volt', undefined);
             }
 
-            setData('custom_starter_kit', '');
+            form.setData('custom_starter_kit', '');
         }
     };
 
     return {
-        data,
-        setData,
-        processing,
-        errors,
+        data: form.data,
+        setData: form.setData,
+        processing: form.processing,
+        errors: form.errors,
+        validating: form.validating,
+        isLoading,
+        modifiedFields,
         handleSubmit,
         handleStackChange,
         handleQueueChange,
         handleFeatureChange,
+        validate: form.validate,
+        detectDependencies,
     };
 };

@@ -5,18 +5,29 @@ import {
 } from '@/components/ui/checkbox';
 import { Fieldset, Label, Legend } from '@/components/ui/fieldset';
 import { FormValues } from '@/types';
+import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 
 interface OptionalFeaturesProps {
     data: FormValues;
     handleFeatureChange: (feature: string, checked: boolean) => void;
+    modifiedFields?: string[];
 }
 
 export const OptionalFeatures = ({
     data,
     handleFeatureChange,
+    modifiedFields = [],
 }: OptionalFeaturesProps) => {
     const { t } = useTranslation();
+
+    // Vérifier si un champ de features spécifique a été modifié automatiquement
+    const isFeatureAutoDetected = (feature: string): boolean => {
+        return (
+            modifiedFields.includes('features') &&
+            data.features.includes(feature)
+        );
+    };
 
     return (
         <Fieldset>
@@ -33,7 +44,12 @@ export const OptionalFeatures = ({
                     />
                     <Label>Task Scheduling</Label>
                 </CheckboxField>
-                <CheckboxField>
+                <CheckboxField
+                    className={clsx(
+                        isFeatureAutoDetected('reverb') &&
+                            'rounded-md border border-blue-500 p-1 dark:border-blue-500',
+                    )}
+                >
                     <Checkbox
                         name="features"
                         value="reverb"
@@ -44,7 +60,12 @@ export const OptionalFeatures = ({
                     />
                     <Label>Reverb</Label>
                 </CheckboxField>
-                <CheckboxField>
+                <CheckboxField
+                    className={clsx(
+                        isFeatureAutoDetected('octane') &&
+                            'rounded-md border border-blue-500 p-1 dark:border-blue-500',
+                    )}
+                >
                     <Checkbox
                         name="features"
                         value="octane"

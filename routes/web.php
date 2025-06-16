@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\DependenciesDetectionController;
 use App\Http\Controllers\DownloadTemplateController;
 use App\Http\Controllers\FetchTranslationsController;
 use App\Http\Controllers\GeneratorController;
@@ -31,6 +32,9 @@ Route::middleware(['throttle:60,1'])->group(function () {
     Route::get('/templates/{template}/download', DownloadTemplateController::class)
         ->middleware(['signed'])
         ->name('templates.download');
+
+    Route::get('/dependencies/detect', [DependenciesDetectionController::class, 'detect'])
+        ->name('dependencies.detect');
 
     Route::localizedGroup(fn () => Route::get('/prompts/{template}', QuestionsController::class)
         ->name('prompts.questions')

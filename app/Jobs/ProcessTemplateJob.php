@@ -148,7 +148,10 @@ final class ProcessTemplateJob implements ShouldQueue
 
         if ($starterKitType === StarterKitEnum::None->value) {
             $this->commands[] = 'ddev composer create-project "laravel/laravel:^12" --remove-vcs --prefer-dist --no-scripts';
-        } else {
+        } elseif($starterKitType === StarterKitEnum::Custom->value) {
+            $this->commands[] = "ddev composer create-project {$config['custom_starter_kit']} --stability=dev --remove-vcs --prefer-dist --no-scripts";
+        }
+        else {
             if ($config['workos']) {
                 $this->commands[] = "ddev composer create-project laravel/$starterKitType-starter-kit:dev-workos --stability=dev --remove-vcs --prefer-dist --no-scripts";
             } elseif ($starterKitType === StarterKitEnum::Livewire->value && $config['livewire_volt']) {
