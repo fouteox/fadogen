@@ -80,6 +80,15 @@ services:
       app:
         condition: service_healthy
 
+  nightwatch:
+    <<: *base
+    environment:
+      CONTAINER_MODE: nightwatch
+    networks: *default-network
+    depends_on:
+      app:
+        condition: service_healthy
+
   valkey:
     profiles: [app]
     image: 'valkey/valkey:alpine'
