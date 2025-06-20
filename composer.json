@@ -11,6 +11,7 @@
         "laravel-lang/common": "^6.4",
         "laravel/framework": "^v12.0",
         "laravel/horizon": "^5.30",
+        "laravel/nightwatch": "^1.7",
         "laravel/octane": "^2.7",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
