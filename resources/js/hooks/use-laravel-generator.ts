@@ -1,5 +1,4 @@
 import {
-    AuthProvider,
     DatabaseType,
     DetectedDependencies,
     FormValues,
@@ -28,7 +27,7 @@ export const useLaravelForm = () => {
         database: 'sqlite' as DatabaseType,
         starter_kit: 'none' as Stack,
         custom_starter_kit: '',
-        workos: undefined as AuthProvider | undefined,
+        workos: undefined as boolean | undefined,
         testing_framework: 'pest' as TestingFramework,
         livewire_volt: undefined as boolean | undefined,
         queue_type: undefined as QueueTypeValue | undefined,
@@ -114,8 +113,8 @@ export const useLaravelForm = () => {
     const handleSubmit = (e: React.FormEvent): void => {
         e.preventDefault();
 
-        form.transform((data: PrecognitionFormData): PrecognitionFormData => {
-            const transformedData: PrecognitionFormData = { ...data };
+        form.transform((data: PrecognitionFormData) => {
+            const transformedData = { ...data };
 
             if (transformedData.starter_kit !== 'custom') {
                 transformedData.custom_starter_kit = '';
@@ -168,7 +167,7 @@ export const useLaravelForm = () => {
             form.setData('livewire_volt', undefined);
         } else {
             if (form.data.workos === undefined) {
-                form.setData('workos', 'laravel');
+                form.setData('workos', false);
             }
 
             if (value === 'livewire') {

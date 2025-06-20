@@ -15,7 +15,6 @@ import { Select } from '@/components/ui/select';
 import { Switch, SwitchField } from '@/components/ui/switch';
 import { fadeInAnimation } from '@/constants/animations';
 import {
-    AuthProvider,
     LaravelFormHook,
     PackageManager,
     SetDataMethod,
@@ -54,7 +53,7 @@ export const StarterKitConfiguration = ({
     };
 
     const handleAuthChange = (value: string) => {
-        setData('workos', value as AuthProvider);
+        setData('workos', value === 'workos');
 
         if (data.starter_kit === 'livewire') {
             if (value === 'workos') {
@@ -177,7 +176,11 @@ export const StarterKitConfiguration = ({
                                     {t('laravel.authentication_provider')}
                                 </Legend>
                                 <RadioGroup
-                                    value={data.workos}
+                                    value={
+                                        data.workos === true
+                                            ? 'workos'
+                                            : 'laravel'
+                                    }
                                     onChange={handleAuthChange}
                                 >
                                     <RadioField>
@@ -197,23 +200,22 @@ export const StarterKitConfiguration = ({
             </AnimatePresence>
 
             <AnimatePresence mode="wait">
-                {data.starter_kit === 'livewire' &&
-                    data.workos === 'laravel' && (
-                        <motion.div {...fadeInAnimation}>
-                            <SwitchField>
-                                <Switch
-                                    name="livewire_volt"
-                                    checked={data.livewire_volt}
-                                    onChange={(checked: boolean) =>
-                                        setData('livewire_volt', checked)
-                                    }
-                                />
-                                <Label>
-                                    {t('Would you like to use Laravel Volt?')}
-                                </Label>
-                            </SwitchField>
-                        </motion.div>
-                    )}
+                {data.starter_kit === 'livewire' && data.workos === false && (
+                    <motion.div {...fadeInAnimation}>
+                        <SwitchField>
+                            <Switch
+                                name="livewire_volt"
+                                checked={data.livewire_volt}
+                                onChange={(checked: boolean) =>
+                                    setData('livewire_volt', checked)
+                                }
+                            />
+                            <Label>
+                                {t('Would you like to use Laravel Volt?')}
+                            </Label>
+                        </SwitchField>
+                    </motion.div>
+                )}
             </AnimatePresence>
 
             <Fieldset>

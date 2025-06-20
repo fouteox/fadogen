@@ -72,7 +72,7 @@ export interface FormValues extends Record<string, FormDataConvertible> {
     starter_kit: Stack;
     custom_starter_kit: string;
     livewire_volt?: boolean;
-    workos: AuthProvider | undefined;
+    workos: boolean | undefined;
     testing_framework: TestingFramework;
     queue_type: QueueTypeValue | undefined;
     queue_driver: QueueDriverValue | undefined;
