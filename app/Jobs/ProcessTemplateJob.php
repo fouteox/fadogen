@@ -110,6 +110,16 @@ final class ProcessTemplateJob implements ShouldQueue
         };
     }
 
+    private function updateEnvVariable(string $key, string $value): string
+    {
+        return sprintf(
+            'ddev exec "perl -pi -e \'s|^#?\\s*%s=.*|%s=%s|\' .env .env.example"',
+            preg_quote($key, '|'),
+            $key,
+            $value
+        );
+    }
+
     private function generateCommands(): void
     {
         $config = $this->template->data;
@@ -169,11 +179,12 @@ final class ProcessTemplateJob implements ShouldQueue
         if ($config['database'] !== DatabaseEnum::SQLite->value) {
             $dbPort = $database->getDefaultPort();
 
-            $this->commands[] = sprintf(
-                'ddev exec "perl -pi -e \'s|DB_CONNECTION=sqlite|DB_CONNECTION=%s|; s|^# *DB_HOST=.*|DB_HOST=db|; s|^# *DB_PORT=.*|DB_PORT=%s|; s|^# *DB_DATABASE=.*|DB_DATABASE=db|; s|^# *DB_USERNAME=.*|DB_USERNAME=db|; s|^# *DB_PASSWORD=.*|DB_PASSWORD=db|\' .env .env.example"',
-                $config['database'],
-                $dbPort
-            );
+            $this->commands[] = $this->updateEnvVariable('DB_CONNECTION', $config['database']);
+            $this->commands[] = $this->updateEnvVariable('DB_HOST', 'db');
+            $this->commands[] = $this->updateEnvVariable('DB_PORT', (string)$dbPort);
+            $this->commands[] = $this->updateEnvVariable('DB_DATABASE', 'db');
+            $this->commands[] = $this->updateEnvVariable('DB_USERNAME', 'db');
+            $this->commands[] = $this->updateEnvVariable('DB_PASSWORD', 'db');
         } else {
             $this->commands[] = 'ddev exec touch database/database.sqlite';
         }
