@@ -15,7 +15,7 @@ check_supervisor_service() {
 }
 
 case "${container_mode}" in
-    "http"|"horizon"|"scheduler"|"reverb"|"nightwatch"|"worker")
+    "http"|"horizon"|"scheduler"|"reverb"|"worker")
         check_supervisor_service "${container_mode}"
         ;;
     *)
