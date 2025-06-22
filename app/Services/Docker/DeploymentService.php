@@ -431,7 +431,7 @@ final class DeploymentService
     {
         $content = str_replace('NODE_VERSION', 'BUN_VERSION', $content);
 
-        $content = preg_replace('/ARG BUN_VERSION=\d+/', 'ARG BUN_VERSION=1.2.16', $content);
+        $content = preg_replace('/ARG BUN_VERSION=\d+/', 'ARG BUN_VERSION=1.2.17', $content);
 
         $content = preg_replace('/FROM node:\$\{BUN_VERSION}-alpine AS build/', 'FROM oven/bun:${BUN_VERSION} AS build', $content);
 
