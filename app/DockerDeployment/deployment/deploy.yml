@@ -68,7 +68,8 @@ jobs:
     steps:
       - name: Install cloudflared
         run: |
-          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          ARCH=${{ vars.SYSTEM_ARCH == 'aarch64' && 'arm64' || 'amd64' }}
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${ARCH}.deb
           sudo dpkg -i cloudflared.deb
 
       - name: Setup SSH configuration
