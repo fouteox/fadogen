@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
+import oxlintPlugin from 'vite-plugin-oxlint';
 
 export default defineConfig(() => {
     const config = {
@@ -14,6 +15,7 @@ export default defineConfig(() => {
             }),
             react(),
             tailwindcss(),
+            oxlintPlugin(),
         ],
         esbuild: {
             jsx: 'automatic',

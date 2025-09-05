@@ -4,26 +4,21 @@
         "build": "tsc && vite build",
         "build:ssr": "tsc && vite build && vite build --ssr",
         "dev": "vite",
-        "lint": "eslint resources/js --ext .js,.jsx,.ts,.tsx --ignore-path .gitignore --fix"
+        "lint": "oxlint --fix",
+        "lint:check": "oxlint"
     },
     "type": "module",
     "devDependencies": {
         "@headlessui/react": "^2.2.7",
         "@inertiajs/react": "^2.1.4",
+        "@prettier/plugin-oxc": "^0.0.4",
         "@tailwindcss/vite": "^4.1.12",
         "@types/node": "^18.19.124",
         "@types/react": "^19.1.12",
         "@types/react-dom": "^19.1.9",
-        "@typescript-eslint/eslint-plugin": "^8.42.0",
-        "@typescript-eslint/parser": "^8.42.0",
         "@vitejs/plugin-react": "^4.7.0",
         "axios": "^1.11.0",
         "clsx": "^2.1.1",
-        "eslint": "^9.34.0",
-        "eslint-config-prettier": "^9.1.2",
-        "eslint-plugin-prettier": "^5.5.4",
-        "eslint-plugin-react": "^7.37.5",
-        "eslint-plugin-react-hooks": "^4.6.2",
         "i18next": "^25.5.0",
         "i18next-browser-languagedetector": "^8.2.0",
         "i18next-http-backend": "^3.0.2",
@@ -32,6 +27,7 @@
         "laravel-vite-plugin": "^2.0.1",
         "lucide-react": "^0.475.0",
         "motion": "^12.23.12",
+        "oxlint": "^1.14.0",
         "prettier": "^3.6.2",
         "prettier-plugin-organize-imports": "^4.2.0",
         "prettier-plugin-tailwindcss": "^0.6.14",
@@ -42,6 +38,7 @@
         "sonner": "^2.0.7",
         "tailwindcss": "^4.1.12",
         "typescript": "^5.9.2",
-        "vite": "^7.1.4"
+        "vite": "^7.1.4",
+        "vite-plugin-oxlint": "^1.4.0"
     }
 }
