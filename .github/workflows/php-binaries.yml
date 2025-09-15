@@ -1,0 +1,285 @@
+name: Build PHP Binaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      php_versions:
+        description: 'PHP versions to build (comma-separated)'
+        required: false
+        default: '8.2,8.3,8.4'
+        type: string
+      extensions:
+        description: 'Extensions to build (comma-separated)'
+        required: false
+        default: 'openssl,curl,mbstring,zlib,pdo,pdo_mysql,redis,pcntl,opcache'
+        type: string
+      extra_libs:
+        description: 'Extra libraries to build (optional, comma-separated)'
+        required: false
+        type: string
+      prefer_pre_built:
+        description: 'Use pre-built binaries to reduce build time'
+        required: false
+        default: true
+        type: boolean
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+
+env:
+  DEFAULT_EXTENSIONS: 'openssl,curl,mbstring,zlib,pdo,pdo_mysql,redis,pcntl,opcache'
+
+jobs:
+  build:
+    name: Build PHP ${{ matrix.php_version }} ARM64
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ${{ fromJSON(format('[{0}]', github.event.inputs.php_versions || '"8.2","8.3","8.4"')) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install static-php-cli
+        run: |
+          # Download spc binary
+          curl -fsSL -o spc https://dl.static-php.dev/static-php-cli/spc-bin/nightly/spc-macos-aarch64
+
+          # Download and verify checksum (if available)
+          if curl -fsSL -o spc.sha256 https://dl.static-php.dev/static-php-cli/spc-bin/nightly/spc-macos-aarch64.sha256 2>/dev/null; then
+            echo "Verifying checksum..."
+            shasum -c spc.sha256
+            rm spc.sha256
+          else
+            echo "Checksum file not available, skipping verification"
+          fi
+
+          chmod +x spc
+          sudo mv spc /usr/local/bin/spc
+
+      - name: Cache PHP sources and dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            downloads
+            buildroot/deps
+          key: spc-${{ matrix.php_version }}-arm64-${{ hashFiles('**/workflow-id') }}-${{ github.event.inputs.extensions || env.DEFAULT_EXTENSIONS }}
+          restore-keys: |
+            spc-${{ matrix.php_version }}-arm64-${{ hashFiles('**/workflow-id') }}-${{ github.event.inputs.extensions || env.DEFAULT_EXTENSIONS }}
+            spc-${{ matrix.php_version }}-arm64-${{ hashFiles('**/workflow-id') }}-
+            spc-${{ matrix.php_version }}-arm64-
+
+      - name: Download PHP sources and dependencies
+        run: |
+          EXTENSIONS="${{ github.event.inputs.extensions || env.DEFAULT_EXTENSIONS }}"
+          EXTRA_LIBS="${{ github.event.inputs.extra_libs }}"
+          PREFER_PRE_BUILT="${{ github.event.inputs.prefer_pre_built || 'true' }}"
+
+          CMD="spc download --for-extensions=\"$EXTENSIONS\" --php-version=\"${{ matrix.php_version }}\""
+
+          if [ "$PREFER_PRE_BUILT" = "true" ]; then
+            CMD="$CMD --prefer-pre-built"
+          fi
+
+          if [ -n "$EXTRA_LIBS" ]; then
+            CMD="$CMD --for-libs=\"$EXTRA_LIBS\""
+          fi
+
+          echo "Running: $CMD"
+          eval "$CMD"
+
+      - name: Clean previous build
+        run: |
+          rm -rf buildroot/ 2>/dev/null || true
+
+      - name: Build PHP binaries (CLI + FPM)
+        run: |
+          EXTENSIONS="${{ github.event.inputs.extensions || env.DEFAULT_EXTENSIONS }}"
+          EXTRA_LIBS="${{ github.event.inputs.extra_libs }}"
+
+          CMD="spc build --build-cli --build-fpm --arch=arm64 --for-extensions=\"$EXTENSIONS\""
+
+          if [ -n "$EXTRA_LIBS" ]; then
+            CMD="$CMD --with-libs=\"$EXTRA_LIBS\""
+          fi
+
+          echo "Running: $CMD"
+          eval "$CMD"
+
+      - name: Verify build results and collect metadata
+        run: |
+          echo "Checking build results..."
+          ls -la buildroot/
+
+          if [ -d "buildroot/bin" ]; then
+            echo "CLI binaries:"
+            ls -la buildroot/bin/
+          fi
+
+          if [ -d "buildroot/sbin" ]; then
+            echo "FPM binaries:"
+            ls -la buildroot/sbin/
+          fi
+
+          # Create dist directory and collect build metadata
+          mkdir -p dist dist/metadata
+
+          if [ -f "buildroot/build-extensions.json" ]; then
+            cp buildroot/build-extensions.json dist/metadata/
+            echo "Extensions metadata collected"
+          fi
+
+          if [ -f "buildroot/build-libraries.json" ]; then
+            cp buildroot/build-libraries.json dist/metadata/
+            echo "Libraries metadata collected"
+          fi
+
+          # Copy license files if they exist
+          if [ -d "buildroot/license" ]; then
+            cp -r buildroot/license dist/metadata/
+            echo "License files collected"
+          fi
+
+      - name: Create binary archives
+        run: |
+
+          # Package CLI binary with verification
+          if [ -f "buildroot/bin/php" ]; then
+            echo "Creating CLI archive..."
+            tar -czf "dist/php-${{ matrix.php_version }}-cli-macos-arm64.tar.gz" -C buildroot bin/php
+            echo "CLI archive created: $(ls -lh dist/php-${{ matrix.php_version }}-cli-macos-arm64.tar.gz)"
+          else
+            echo "ERROR: CLI binary not found at buildroot/bin/php"
+            exit 1
+          fi
+
+          # Package FPM binary with verification
+          if [ -f "buildroot/sbin/php-fpm" ]; then
+            echo "Creating FPM archive..."
+            tar -czf "dist/php-${{ matrix.php_version }}-fpm-macos-arm64.tar.gz" -C buildroot sbin/php-fpm
+            echo "FPM archive created: $(ls -lh dist/php-${{ matrix.php_version }}-fpm-macos-arm64.tar.gz)"
+          else
+            echo "ERROR: FPM binary not found at buildroot/sbin/php-fpm"
+            exit 1
+          fi
+
+      - name: Generate SHA256 checksums
+        run: |
+          cd dist
+          for file in *.tar.gz; do
+            if [ -f "$file" ]; then
+              shasum -a 256 "$file" > "$file.sha256"
+            fi
+          done
+
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-binaries-${{ matrix.php_version }}-arm64
+          path: dist/
+          retention-days: 30
+
+  upload-to-r2:
+    name: Upload all artifacts to R2
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Organize artifacts
+        run: |
+          # Create unified dist directory
+          mkdir -p dist
+
+          # Move all binaries and checksums to dist/
+          find artifacts/ -name "*.tar.gz" -exec cp {} dist/ \;
+          find artifacts/ -name "*.sha256" -exec cp {} dist/ \;
+
+          # Move all metadata to dist/metadata/
+          mkdir -p dist/metadata
+          find artifacts/ -name "build-*.json" -exec cp {} dist/metadata/ \;
+          find artifacts/ -name "license" -type d -exec cp -r {} dist/metadata/ \;
+
+          echo "Final dist structure:"
+          ls -la dist/
+          ls -la dist/metadata/ || true
+
+      - name: Generate minimal versions.json
+        run: |
+          EXTENSIONS="${{ github.event.inputs.extensions || env.DEFAULT_EXTENSIONS }}"
+          EXTRA_LIBS="${{ github.event.inputs.extra_libs }}"
+          PREFER_PRE_BUILT="${{ github.event.inputs.prefer_pre_built || 'true' }}"
+          BUILD_DATE="$(date -u +"%Y.%m.%d")"
+
+          cat > dist/versions.json << EOF
+          {
+            "lastUpdated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "php": {
+              "8.4": { "status": "latest", "build": "$BUILD_DATE" },
+              "8.3": { "status": "stable", "build": "$BUILD_DATE" },
+              "8.2": { "status": "stable", "build": "$BUILD_DATE" }
+            },
+            "extensions": "$EXTENSIONS",
+            "extraLibs": "$EXTRA_LIBS",
+            "preferPreBuilt": $PREFER_PRE_BUILT,
+            "architecture": "macos-arm64"
+          }
+          EOF
+
+          echo "Generated versions.json:"
+          cat dist/versions.json
+
+      - name: Generate unified checksums
+        run: |
+          cd dist
+          # Create unified checksums file
+          for file in *.tar.gz; do
+            if [ -f "$file" ]; then
+              shasum -a 256 "$file"
+            fi
+          done > checksums.txt
+
+          echo "Generated checksums.txt:"
+          cat checksums.txt
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}
+          aws-region: auto
+
+      - name: Upload all artifacts to R2
+        env:
+          AWS_ENDPOINT_URL: ${{ secrets.CLOUDFLARE_R2_ENDPOINT }}
+        run: |
+          echo "Uploading all artifacts to R2..."
+
+          aws s3 sync dist/ "s3://${{ secrets.CLOUDFLARE_R2_BUCKET }}/" \
+            --endpoint-url "$AWS_ENDPOINT_URL" \
+            --exclude "metadata/*" \
+            --cache-control "public, max-age=31536000" \
+            --metadata-directive REPLACE
+
+          # Upload metadata separately with different cache policy
+          if [ -d "dist/metadata" ]; then
+            aws s3 sync dist/metadata/ "s3://${{ secrets.CLOUDFLARE_R2_BUCKET }}/metadata/" \
+              --endpoint-url "$AWS_ENDPOINT_URL" \
+              --cache-control "public, max-age=3600"
+          fi
+
+          echo "Upload completed successfully!"
+
+      - name: Upload consolidated artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-binaries-all
+          path: dist/
+          retention-days: 30
