@@ -145,6 +145,15 @@ final class ProcessTemplateJob implements ShouldQueue
 
         $this->commands[] = "ddev dotenv set .ddev/.env.web --database $database->value";
 
+        if (isset($config['javascript_package_manager'])) {
+            $javascriptPackageManager = $config['javascript_package_manager'];
+            $this->commands[] = "ddev dotenv set .ddev/.env.web --javascript-package-manager $javascriptPackageManager";
+
+            if ($config['javascript_package_manager'] === JavascriptPackageManagerEnum::Bun->value) {
+                $this->commands[] = 'ddev add-on get fouteox/ddev-bun';
+            }
+        }
+
         $starterKitType = $config['starter_kit'];
 
         if ($starterKitType === StarterKitEnum::None->value) {
@@ -164,14 +173,7 @@ final class ProcessTemplateJob implements ShouldQueue
         $this->commands[] = 'ddev composer run post-root-package-install';
         $this->commands[] = 'ddev php artisan key:generate --ansi';
 
-        if (isset($config['javascript_package_manager'])) {
-            $javascriptPackageManager = $config['javascript_package_manager'];
-            $this->commands[] = "ddev dotenv set .ddev/.env.web --javascript-package-manager $javascriptPackageManager";
-
-            if ($config['javascript_package_manager'] === JavascriptPackageManagerEnum::Bun->value) {
-                $this->commands[] = 'ddev add-on get fouteox/ddev-bun';
-            }
-        }
+        $this->commands[] = 'docker run --rm -v ${PWD}:/app python:3-alpine python /app/.ddev/bun/package_json_updater.py';
 
         $this->installNodeDependencies();
 
