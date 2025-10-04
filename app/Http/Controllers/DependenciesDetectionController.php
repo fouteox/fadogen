@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\DatabaseEnum;
+use App\Enums\FeaturesEnum;
+use App\Enums\JavascriptPackageManagerEnum;
+use App\Enums\PhpVersionEnum;
+use App\Enums\QueueDriverEnum;
+use App\Enums\QueueTypeEnum;
+use App\Enums\TestingFrameworkEnum;
+use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Enums\FeaturesEnum;
-use App\Enums\QueueTypeEnum;
-use App\Enums\QueueDriverEnum;
-use App\Enums\TestingFrameworkEnum;
-use App\Enums\PhpVersionEnum;
-use App\Enums\JavascriptPackageManagerEnum;
-use App\Enums\DatabaseEnum;
-use Exception;
 
 final class DependenciesDetectionController extends Controller
 {
@@ -27,7 +27,7 @@ final class DependenciesDetectionController extends Controller
             'features' => [],
         ];
 
-        if (!$customPackage) {
+        if (! $customPackage) {
             return response()->json();
         }
 
@@ -38,7 +38,7 @@ final class DependenciesDetectionController extends Controller
                 $this->analyseRepositoryFiles($customPackage, $detectedDependencies);
             }
         } catch (Exception $e) {
-            Log::error("Error analyzing package $customPackage: " . $e->getMessage());
+            Log::error("Error analyzing package $customPackage: ".$e->getMessage());
         }
 
         return response()->json(['detected' => $detectedDependencies]);
@@ -69,7 +69,7 @@ final class DependenciesDetectionController extends Controller
             $this->detectJsPackageManager($vendor, $repo, $detectedDependencies);
 
         } catch (Exception $e) {
-            Log::info("Unable to analyze repository files for $package: " . $e->getMessage());
+            Log::info("Unable to analyze repository files for $package: ".$e->getMessage());
         }
     }
 
@@ -79,7 +79,7 @@ final class DependenciesDetectionController extends Controller
     private function detectDatabaseFromEnvExample(string $envContent, array &$detectedDependencies): void
     {
         if (preg_match('/DB_CONNECTION=(\S+)/i', $envContent, $matches)) {
-            $dbConnection = strtolower(trim($matches[1]));
+            $dbConnection = mb_strtolower(mb_trim($matches[1]));
 
             switch ($dbConnection) {
                 case 'mysql':
@@ -100,6 +100,7 @@ final class DependenciesDetectionController extends Controller
 
     /**
      * Detect JavaScript package manager by checking lock files existence
+     *
      * @throws ConnectionException
      */
     private function detectJsPackageManager(string $vendor, string $repo, array &$detectedDependencies): void
@@ -109,6 +110,7 @@ final class DependenciesDetectionController extends Controller
 
         if ($npmResponse->successful()) {
             $detectedDependencies['javascript_package_manager'] = JavascriptPackageManagerEnum::Npm->value;
+
             return;
         }
 
@@ -117,6 +119,7 @@ final class DependenciesDetectionController extends Controller
 
         if ($npmResponse->successful()) {
             $detectedDependencies['javascript_package_manager'] = JavascriptPackageManagerEnum::Npm->value;
+
             return;
         }
 
@@ -125,6 +128,7 @@ final class DependenciesDetectionController extends Controller
 
         if ($bunResponse->successful()) {
             $detectedDependencies['javascript_package_manager'] = JavascriptPackageManagerEnum::Bun->value;
+
             return;
         }
 
@@ -147,18 +151,18 @@ final class DependenciesDetectionController extends Controller
         $composerUrl = "https://raw.githubusercontent.com/$vendor/$repo/main/composer.json";
         $response = Http::get($composerUrl);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $composerUrl = "https://raw.githubusercontent.com/$vendor/$repo/master/composer.json";
             $response = Http::get($composerUrl);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new Exception("Unable to retrieve composer.json from repository $package");
             }
         }
 
         $composerData = $response->json();
 
-        if (!$composerData) {
+        if (! $composerData) {
             throw new Exception("Invalid composer.json format for $package");
         }
 
@@ -213,7 +217,7 @@ final class DependenciesDetectionController extends Controller
         $highestVersion = null;
 
         foreach ($versions as $versionConstraint) {
-            $versionConstraint = trim($versionConstraint);
+            $versionConstraint = mb_trim($versionConstraint);
 
             if (preg_match('/(\d+\.\d+)/', $versionConstraint, $matches)) {
                 $version = $matches[1];
@@ -227,9 +231,11 @@ final class DependenciesDetectionController extends Controller
         if ($highestVersion !== null) {
             if (version_compare($highestVersion, '8.4', '>=')) {
                 return PhpVersionEnum::Php84->value;
-            } elseif (version_compare($highestVersion, '8.3', '>=')) {
+            }
+            if (version_compare($highestVersion, '8.3', '>=')) {
                 return PhpVersionEnum::Php83->value;
-            } elseif (version_compare($highestVersion, '8.2', '>=')) {
+            }
+            if (version_compare($highestVersion, '8.2', '>=')) {
                 return PhpVersionEnum::Php82->value;
             }
         }

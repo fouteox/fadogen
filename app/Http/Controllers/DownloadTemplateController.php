@@ -30,7 +30,7 @@ final class DownloadTemplateController extends Controller
 
         $archiveContent = Storage::get($template->id.'.tar');
 
-//        Storage::delete($template->id.'.tar');
+        //        Storage::delete($template->id.'.tar');
 
         $template->status = TemplateStatusEnum::Downloaded;
         $template->save();

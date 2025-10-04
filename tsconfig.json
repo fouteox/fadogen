@@ -11,9 +11,11 @@
         "forceConsistentCasingInFileNames": true,
         "skipLibCheck": true,
         "noEmit": true,
+        "noImplicitAny": true,
+        "baseUrl": ".",
         "paths": {
             "@/*": ["./resources/js/*"]
-        }
+        },
     },
-    "include": ["resources/js/**/*.ts", "resources/js/**/*.tsx", "resources/js/**/*.d.ts"]
+    "include": ["resources/js/**/*.ts", "resources/js/**/*.d.ts", "resources/js/**/*.tsx"]
 }

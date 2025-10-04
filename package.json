@@ -1,11 +1,12 @@
 {
     "private": true,
     "scripts": {
-        "build": "tsc && vite build",
-        "build:ssr": "tsc && vite build && vite build --ssr",
+        "build": "vite build",
+        "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
         "lint": "oxlint --fix",
-        "lint:check": "oxlint"
+        "lint:check": "oxlint",
+        "types": "tsc"
     },
     "type": "module",
     "devDependencies": {
@@ -14,7 +15,7 @@
         "@laravel/vite-plugin-wayfinder": "^0.1.7",
         "@prettier/plugin-oxc": "^0.0.4",
         "@tailwindcss/vite": "^4.1.14",
-        "@types/node": "^18.19.129",
+        "@types/node": "^22.18.8",
         "@types/react": "^19.2.0",
         "@types/react-dom": "^19.2.0",
         "@vitejs/plugin-react": "^4.7.0",
@@ -35,7 +36,7 @@
         "pusher-js": "^8.4.0",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
-        "react-i18next": "^15.7.4",
+        "react-i18next": "^16.0.0",
         "sonner": "^2.0.7",
         "tailwindcss": "^4.1.14",
         "typescript": "^5.9.3",

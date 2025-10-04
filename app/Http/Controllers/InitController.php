@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\TemplateStatusEnum;
 use App\Models\Template;
 use Illuminate\Http\Response;
 

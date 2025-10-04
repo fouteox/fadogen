@@ -61,10 +61,10 @@ final class ProjectConfigurationData extends Data
                 Rule::when(
                     request()->input('starter_kit') === StarterKitEnum::Custom->value,
                     ['required', 'string', 'max:255', function ($attribute, $value, $fail) {
-                        if (!empty($value)) {
+                        if (! empty($value)) {
                             try {
                                 $response = Http::get("https://packagist.org/packages/$value.json");
-                                if (!$response->successful()) {
+                                if (! $response->successful()) {
                                     $fail("Le package '$value' n'existe pas sur Packagist.org.");
                                 }
                             } catch (Exception $e) {

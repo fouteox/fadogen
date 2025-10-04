@@ -53,5 +53,3 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/locales/{locale}/translation.json', FetchTranslationsController::class)->name('i18next.fetch');
-
-require __DIR__.'/auth.php';
