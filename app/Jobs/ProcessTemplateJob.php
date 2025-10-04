@@ -158,10 +158,9 @@ final class ProcessTemplateJob implements ShouldQueue
 
         if ($starterKitType === StarterKitEnum::None->value) {
             $this->commands[] = 'ddev composer create-project "laravel/laravel:^12" --remove-vcs --prefer-dist --no-scripts';
-        } elseif($starterKitType === StarterKitEnum::Custom->value) {
+        } elseif ($starterKitType === StarterKitEnum::Custom->value) {
             $this->commands[] = "ddev composer create-project {$config['custom_starter_kit']} --stability=dev --remove-vcs --prefer-dist --no-scripts";
-        }
-        else {
+        } else {
             if ($config['workos']) {
                 $this->commands[] = "ddev composer create-project laravel/$starterKitType-starter-kit:dev-workos --stability=dev --remove-vcs --prefer-dist --no-scripts";
             } elseif ($starterKitType === StarterKitEnum::Livewire->value && $config['livewire_volt']) {
@@ -181,7 +180,7 @@ final class ProcessTemplateJob implements ShouldQueue
 
             $this->commands[] = $this->updateEnvVariable('DB_CONNECTION', $config['database']);
             $this->commands[] = $this->updateEnvVariable('DB_HOST', 'db');
-            $this->commands[] = $this->updateEnvVariable('DB_PORT', (string)$dbPort);
+            $this->commands[] = $this->updateEnvVariable('DB_PORT', (string) $dbPort);
             $this->commands[] = $this->updateEnvVariable('DB_DATABASE', 'db');
             $this->commands[] = $this->updateEnvVariable('DB_USERNAME', 'db');
             $this->commands[] = $this->updateEnvVariable('DB_PASSWORD', 'db');

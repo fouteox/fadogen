@@ -1,5 +1,4 @@
 ARG PHP_VERSION=8.4
-ARG NODE_VERSION=22
 
 FROM fouteox/laravel-php-base:${PHP_VERSION} AS base
 
@@ -23,14 +22,11 @@ COPY --chown=${USER}:${USER} deployment/supervisord.*.conf /etc/supervisor/conf.
 
 FROM base AS common
 
-USER ${USER}
-
 COPY --link --chown=${WWWUSER}:${WWWGROUP} composer.json composer.lock ./
 
 RUN composer install \
     --no-dev \
     --no-interaction \
-    --no-autoloader \
     --no-ansi \
     --no-scripts \
     --audit
@@ -39,26 +35,19 @@ RUN composer install \
 # Build frontend assets
 ###########################################
 
-FROM node:${NODE_VERSION}-alpine AS build
+FROM common AS build
 
-ENV ROOT=/app
-
-WORKDIR ${ROOT}
-
-COPY --link package*.json ./
+COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json ./
 
 RUN npm install
 
-COPY --link . .
-COPY --link --from=common ${ROOT}/vendor vendor
+COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
 
 RUN npm run build:ssr
 
 ###########################################
 
 FROM common AS prod
-
-USER ${USER}
 
 COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
 COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/public public
@@ -71,9 +60,5 @@ RUN mkdir -p ${ROOT}/storage/framework/{sessions,views,cache,testing} ${ROOT}/st
     && chmod 664 ${ROOT}/database/database/database.sqlite \
     && chmod -R a+rw ${ROOT}/storage ${ROOT}/bootstrap/cache ${ROOT}/database/database
 
-RUN composer install \
-    --classmap-authoritative \
-    --no-interaction \
-    --no-ansi \
-    --no-dev \
+RUN composer dump-autoload --classmap-authoritative --no-dev --no-scripts \
     && composer clear-cache

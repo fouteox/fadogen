@@ -429,13 +429,8 @@ final class DeploymentService
 
     private function replaceNodeWithBun(string $content): string
     {
-        $content = str_replace('NODE_VERSION', 'BUN_VERSION', $content);
-
-        $content = preg_replace('/ARG BUN_VERSION=\d+/', 'ARG BUN_VERSION=1.2.19', $content);
-
-        $content = preg_replace('/FROM node:\$\{BUN_VERSION}-alpine AS build/', 'FROM oven/bun:${BUN_VERSION} AS build', $content);
-
         $content = str_replace('COPY --link package*.json ./', 'COPY --link package.json bun.lock* ./', $content);
+        $content = str_replace('COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json ./', 'COPY --link --chown=${WWWUSER}:${WWWGROUP} package.json bun.lock* ./', $content);
 
         $content = str_replace('RUN npm install', 'RUN bun install --frozen-lockfile', $content);
 
