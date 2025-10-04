@@ -1,36 +1,30 @@
 import { Button } from '@/components/ui/button';
-import {
-    ErrorMessage,
-    Field,
-    FieldGroup,
-    Fieldset,
-    Label,
-    Legend,
-} from '@/components/ui/fieldset';
+import { ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/ui/fieldset';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
+import { store } from '@/actions/App/Http/Controllers/Auth/PasswordResetLinkController';
 
 export default function ForgotPassword({ status }: { status?: string }) {
     const { t } = useTranslation();
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, processing, submit, errors } = useForm({
         email: '',
     });
 
-    const submit: FormEventHandler = (e) => {
+    const forgotPassword: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('password.email'));
+        submit(store());
     };
 
     return (
         <>
             <Head title={t('Forgot Password')} />
 
-            <form onSubmit={submit} className={'mx-auto w-full sm:max-w-md'}>
+            <form onSubmit={forgotPassword} className={'mx-auto w-full sm:max-w-md'}>
                 <Fieldset>
                     <Legend>{t('Forgot Password')}</Legend>
                     <Text>
@@ -46,23 +40,15 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                 autoFocus
                                 name="Email"
                                 value={data.email}
-                                onChange={(e) =>
-                                    setData('email', e.target.value)
-                                }
+                                onChange={(e) => setData('email', e.target.value)}
                                 required
                                 autoComplete="email"
                                 invalid={!!errors.email}
                                 type="email"
                             />
-                            {errors.email && (
-                                <ErrorMessage>{errors.email}</ErrorMessage>
-                            )}
+                            {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
 
-                            {status && (
-                                <div className="mt-3 text-base/6 font-medium text-green-600 sm:text-sm/6 dark:text-green-400">
-                                    {status}
-                                </div>
-                            )}
+                            {status && <div className="mt-3 text-base/6 font-medium text-green-600 sm:text-sm/6 dark:text-green-400">{status}</div>}
                         </Field>
 
                         <div className="mt-4 flex justify-end">

@@ -4,27 +4,27 @@ import { Text, TextLink } from '@/components/ui/text';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
+import { store } from '@/actions/App/Http/Controllers/Auth/EmailVerificationNotificationController';
+import { logout } from '@/routes';
 
 export default function VerifyEmail({ status }: { status?: string }) {
     const { t } = useTranslation();
 
-    const { post, processing } = useForm({});
+    const { processing, submit } = useForm({});
 
-    const submit: FormEventHandler = (e) => {
+    const verifyEmail: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('verification.send'));
+        submit(store());
     };
 
     return (
         <>
             <Head title={t('Email Verification')} />
 
-            <form onSubmit={submit} className={'mx-auto w-full sm:max-w-md'}>
+            <form onSubmit={verifyEmail} className={'mx-auto w-full sm:max-w-md'}>
                 <Fieldset>
-                    <Legend className={'text-center sm:text-xl'}>
-                        {t('Email Verification')}
-                    </Legend>
+                    <Legend className={'text-center sm:text-xl'}>{t('Email Verification')}</Legend>
 
                     <Text>
                         {t(
@@ -35,9 +35,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
 
                 {status === 'verification-link-sent' && (
                     <div className="mb-4 text-sm font-medium text-green-600 dark:text-green-400">
-                        {t(
-                            'A new verification link has been sent to the email address you provided during registration.',
-                        )}
+                        {t('A new verification link has been sent to the email address you provided during registration.')}
                     </div>
                 )}
 
@@ -46,7 +44,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
                         {t('Resend Verification Email')}
                     </Button>
 
-                    <TextLink href={route('logout')} method="post" as="button">
+                    <TextLink href={logout()} method="post" as="button">
                         {t('Log Out')}
                     </TextLink>
                 </div>

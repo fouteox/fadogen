@@ -8,13 +8,17 @@ export interface User {
     email_verified_at?: string;
 }
 
-export type PageProps<
-    T extends Record<string, unknown> = Record<string, unknown>,
-> = T & {
+export interface NavItem {
+    title: string;
+    href: NonNullable<InertiaLinkProps['href']>;
+    icon?: LucideIcon | null;
+    isActive?: boolean;
+}
+
+export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
     auth: {
         user: User;
     };
-    ziggy: Config & { location: string };
     locale: string;
     translations: TranslationStore | null;
 };
@@ -57,13 +61,7 @@ export interface QueueHandlers {
     handleQueueChange: (e: SelectChangeEvent) => void;
 }
 
-export type FormDataConvertible =
-    | string
-    | number
-    | boolean
-    | File
-    | string[]
-    | undefined;
+export type FormDataConvertible = string | number | boolean | File | string[] | undefined;
 
 export interface FormValues extends Record<string, FormDataConvertible> {
     project_name: string;

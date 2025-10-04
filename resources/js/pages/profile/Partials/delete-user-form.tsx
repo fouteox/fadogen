@@ -1,10 +1,4 @@
-import {
-    Alert,
-    AlertActions,
-    AlertBody,
-    AlertDescription,
-    AlertTitle,
-} from '@/components/ui/alert';
+import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ErrorMessage } from '@/components/ui/fieldset';
 import { Subheading } from '@/components/ui/heading';
@@ -13,21 +7,14 @@ import { Text } from '@/components/ui/text';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { destroy } from '@/routes/profile';
 
 export default function DeleteUserForm() {
     const { t } = useTranslation();
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
     const passwordInput = useRef<HTMLInputElement>(null);
 
-    const {
-        data,
-        setData,
-        delete: destroy,
-        processing,
-        reset,
-        errors,
-        clearErrors,
-    } = useForm({
+    const { data, setData, submit, processing, reset, errors, clearErrors } = useForm({
         password: '',
     });
 
@@ -38,7 +25,7 @@ export default function DeleteUserForm() {
     const deleteUser: FormEventHandler = (e) => {
         e.preventDefault();
 
-        destroy(route('profile.destroy'), {
+        submit(destroy(), {
             preserveScroll: true,
             onSuccess: () => closeModal(),
             onError: () => passwordInput.current?.focus(),
@@ -70,9 +57,7 @@ export default function DeleteUserForm() {
 
             <Alert open={confirmingUserDeletion} onClose={closeModal} size="lg">
                 <form onSubmit={deleteUser} className="p-6">
-                    <AlertTitle>
-                        {t('Are you sure you want to delete your account?')}
-                    </AlertTitle>
+                    <AlertTitle>{t('Are you sure you want to delete your account?')}</AlertTitle>
                     <AlertDescription>
                         {t(
                             'Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.',
@@ -86,16 +71,12 @@ export default function DeleteUserForm() {
                             placeholder={t('Password')}
                             name="password"
                             value={data.password}
-                            onChange={(e) =>
-                                setData('password', e.target.value)
-                            }
+                            onChange={(e) => setData('password', e.target.value)}
                             required
                             invalid={!!errors.password}
                             type="password"
                         />
-                        {errors.password && (
-                            <ErrorMessage>{errors.password}</ErrorMessage>
-                        )}
+                        {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
                     </AlertBody>
                     <AlertActions>
                         <Button plain onClick={closeModal}>

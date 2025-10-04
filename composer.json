@@ -16,6 +16,7 @@
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "laravel/wayfinder": "^0.1.12",
         "league/flysystem-aws-s3-v3": "^3.0",
         "spatie/laravel-data": "^4.13",
         "symfony/yaml": "^7.2",

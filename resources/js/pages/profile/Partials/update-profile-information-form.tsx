@@ -1,10 +1,5 @@
 import { Button } from '@/components/ui/button';
-import {
-    ErrorMessage,
-    Field,
-    FieldGroup,
-    Label,
-} from '@/components/ui/fieldset';
+import { ErrorMessage, Field, FieldGroup, Label } from '@/components/ui/fieldset';
 import { Subheading } from '@/components/ui/heading';
 import { Input } from '@/components/ui/input';
 import { Link } from '@/components/ui/link';
@@ -13,41 +8,32 @@ import { Transition } from '@headlessui/react';
 import { useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
+import { update } from '@/routes/profile';
+import { send } from '@/routes/verification';
 
-export default function UpdateProfileInformation({
-    mustVerifyEmail,
-    status,
-}: {
-    mustVerifyEmail: boolean;
-    status?: string;
-}) {
+export default function UpdateProfileInformation({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { t } = useTranslation();
     const user = usePage().props.auth.user;
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } =
-        useForm({
-            name: user.name,
-            email: user.email,
-        });
+    const { data, setData, submit, errors, processing, recentlySuccessful } = useForm({
+        name: user.name,
+        email: user.email,
+    });
 
-    const submit: FormEventHandler = (e) => {
+    const updateProfile: FormEventHandler = (e) => {
         e.preventDefault();
 
-        patch(route('profile.update'));
+        submit(update());
     };
 
     return (
         <section className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
             <div className="space-y-1">
                 <Subheading>{t('Profile Information')}</Subheading>
-                <Text>
-                    {t(
-                        "Update your account's profile information and email address.",
-                    )}
-                </Text>
+                <Text>{t("Update your account's profile information and email address.")}</Text>
             </div>
 
-            <form onSubmit={submit}>
+            <form onSubmit={updateProfile}>
                 <FieldGroup>
                     <Field>
                         <Label>{t('Name')}</Label>
@@ -59,9 +45,7 @@ export default function UpdateProfileInformation({
                             autoComplete="name"
                             invalid={!!errors.name}
                         />
-                        {errors.name && (
-                            <ErrorMessage>{errors.name}</ErrorMessage>
-                        )}
+                        {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
                     </Field>
 
                     <Field>
@@ -75,9 +59,7 @@ export default function UpdateProfileInformation({
                             invalid={!!errors.email}
                             type="email"
                         />
-                        {errors.email && (
-                            <ErrorMessage>{errors.email}</ErrorMessage>
-                        )}
+                        {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
                     </Field>
 
                     {mustVerifyEmail && user.email_verified_at === null && (
@@ -85,22 +67,18 @@ export default function UpdateProfileInformation({
                             <p className="mt-2 text-sm text-gray-800 dark:text-gray-200">
                                 {t('Your email address is unverified.')}
                                 <Link
-                                    href={route('verification.send')}
+                                    href={send().url}
                                     method="post"
                                     as="button"
                                     className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
                                 >
-                                    {t(
-                                        'Click here to re-send the verification email.',
-                                    )}
+                                    {t('Click here to re-send the verification email.')}
                                 </Link>
                             </p>
 
                             {status === 'verification-link-sent' && (
                                 <div className="mt-2 text-sm font-medium text-green-600 dark:text-green-400">
-                                    {t(
-                                        'A new verification link has been sent to your email address.',
-                                    )}
+                                    {t('A new verification link has been sent to your email address.')}
                                 </div>
                             )}
                         </div>
@@ -114,9 +92,7 @@ export default function UpdateProfileInformation({
                             leave="transition ease-in-out"
                             leaveTo="opacity-0"
                         >
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {t('Saved.')}
-                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{t('Saved.')}</p>
                         </Transition>
 
                         <Button type="submit" disabled={processing}>

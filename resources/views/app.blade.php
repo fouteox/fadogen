@@ -18,7 +18,6 @@
         <link rel="preconnect" href="https://rsms.me">
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
 
-        @routes
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @inertiaHead

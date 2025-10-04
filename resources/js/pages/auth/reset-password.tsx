@@ -1,35 +1,25 @@
 import { Button } from '@/components/ui/button';
-import {
-    ErrorMessage,
-    Field,
-    FieldGroup,
-    Label,
-} from '@/components/ui/fieldset';
+import { ErrorMessage, Field, FieldGroup, Label } from '@/components/ui/fieldset';
 import { Input } from '@/components/ui/input';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
+import { store } from '@/actions/App/Http/Controllers/Auth/NewPasswordController';
 
-export default function ResetPassword({
-    token,
-    email,
-}: {
-    token: string;
-    email: string;
-}) {
+export default function ResetPassword({ token, email }: { token: string; email: string }) {
     const { t } = useTranslation();
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, processing, submit, errors, reset } = useForm({
         token: token,
         email: email,
         password: '',
         password_confirmation: '',
     });
 
-    const submit: FormEventHandler = (e) => {
+    const resetPassword: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('password.store'), {
+        submit(store(), {
             onFinish: () => reset('password', 'password_confirmation'),
         });
     };
@@ -38,7 +28,7 @@ export default function ResetPassword({
         <>
             <Head title={t('Reset Password')} />
 
-            <form onSubmit={submit} className={'mx-auto w-full sm:max-w-md'}>
+            <form onSubmit={resetPassword} className={'mx-auto w-full sm:max-w-md'}>
                 <FieldGroup>
                     <Field>
                         <Label>{t('Email')}</Label>
@@ -51,9 +41,7 @@ export default function ResetPassword({
                             invalid={!!errors.email}
                             type="email"
                         />
-                        {errors.email && (
-                            <ErrorMessage>{errors.email}</ErrorMessage>
-                        )}
+                        {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
                     </Field>
 
                     <Field>
@@ -62,17 +50,13 @@ export default function ResetPassword({
                             type="password"
                             name="password"
                             value={data.password}
-                            onChange={(e) =>
-                                setData('password', e.target.value)
-                            }
+                            onChange={(e) => setData('password', e.target.value)}
                             required
                             autoFocus
                             autoComplete="new-password"
                             invalid={!!errors.password}
                         />
-                        {errors.password && (
-                            <ErrorMessage>{errors.password}</ErrorMessage>
-                        )}
+                        {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
                     </Field>
 
                     <Field>
@@ -81,18 +65,12 @@ export default function ResetPassword({
                             type="password"
                             name="password_confirmation"
                             value={data.password_confirmation}
-                            onChange={(e) =>
-                                setData('password_confirmation', e.target.value)
-                            }
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
                             required
                             autoComplete="new-password"
                             invalid={!!errors.password_confirmation}
                         />
-                        {errors.password_confirmation && (
-                            <ErrorMessage>
-                                {errors.password_confirmation}
-                            </ErrorMessage>
-                        )}
+                        {errors.password_confirmation && <ErrorMessage>{errors.password_confirmation}</ErrorMessage>}
                     </Field>
 
                     <div className="mt-4 flex justify-end">

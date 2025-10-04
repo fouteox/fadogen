@@ -15,13 +15,16 @@ import { useForm } from 'laravel-precognition-react-inertia';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { store } from '@/routes/generator';
+import { detect } from '@/actions/App/Http/Controllers/DependenciesDetectionController';
 
 export const useLaravelForm = () => {
     const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
     const [modifiedFields, setModifiedFields] = useState<string[]>([]);
 
-    const form = useForm('post', route('generator.store'), {
+    // TODO : remove precognition
+    const form = useForm('post', store().url, {
         project_name: '',
         php_version: '8.4' as PhpVersion,
         database: 'sqlite' as DatabaseType,
@@ -50,10 +53,9 @@ export const useLaravelForm = () => {
 
         try {
             setIsLoading(true);
-            const response: AxiosResponse<{ detected: DetectedDependencies }> =
-                await axios.get(route('dependencies.detect'), {
-                    params: { package: customPackage },
-                });
+            const response: AxiosResponse<{ detected: DetectedDependencies }> = await axios.get(detect().url, {
+                params: { package: customPackage },
+            });
 
             const { detected } = response.data;
 
@@ -64,20 +66,10 @@ export const useLaravelForm = () => {
                     if (key !== 'notifications' && value !== undefined) {
                         if (key in form.data) {
                             const typedKey = key as keyof FormValues;
-                            const originalValue = (
-                                form.data as Record<string, unknown>
-                            )[typedKey];
+                            const originalValue = (form.data as Record<string, unknown>)[typedKey];
 
-                            if (
-                                JSON.stringify(originalValue) !==
-                                JSON.stringify(value)
-                            ) {
-                                (
-                                    form.setData as (
-                                        key: string,
-                                        value: unknown,
-                                    ) => void
-                                )(String(typedKey), value);
+                            if (JSON.stringify(originalValue) !== JSON.stringify(value)) {
+                                (form.setData as (key: string, value: unknown) => void)(String(typedKey), value);
 
                                 newModifiedFields.push(typedKey as string);
                             }
@@ -88,17 +80,9 @@ export const useLaravelForm = () => {
                 setModifiedFields(newModifiedFields);
 
                 if (newModifiedFields.length > 0) {
-                    toast.info(
-                        t(
-                            'Some fields have been modified due to the selected custom package. Please carefully review the form.',
-                        ),
-                    );
+                    toast.info(t('Some fields have been modified due to the selected custom package. Please carefully review the form.'));
                 } else {
-                    toast.info(
-                        t(
-                            'No specific configuration has been detected for this package.',
-                        ),
-                    );
+                    toast.info(t('No specific configuration has been detected for this package.'));
                 }
             }
         } catch (error: unknown) {
@@ -126,9 +110,7 @@ export const useLaravelForm = () => {
         form.submit();
     };
 
-    const handleQueueChange = (
-        e: React.ChangeEvent<HTMLSelectElement>,
-    ): void => {
+    const handleQueueChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
         const value = e.target.value as QueueTypeValue | 'none';
         if (value === 'none') {
             form.setData('queue_type', undefined);
@@ -140,15 +122,11 @@ export const useLaravelForm = () => {
     };
 
     const handleFeatureChange = (feature: string, checked: boolean): void => {
-        const updatedFeatures = checked
-            ? [...form.data.features, feature]
-            : form.data.features.filter((f) => f !== feature);
+        const updatedFeatures = checked ? [...form.data.features, feature] : form.data.features.filter((f) => f !== feature);
         form.setData('features', updatedFeatures);
     };
 
-    const handleStackChange = (
-        e: React.ChangeEvent<HTMLSelectElement>,
-    ): void => {
+    const handleStackChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
         const value = e.target.value as Stack;
         const previousValue = form.data.starter_kit;
         form.setData('starter_kit', value);

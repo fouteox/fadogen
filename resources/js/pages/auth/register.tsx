@@ -1,32 +1,27 @@
 import { Button } from '@/components/ui/button';
-import {
-    ErrorMessage,
-    Field,
-    FieldGroup,
-    Fieldset,
-    Label,
-    Legend,
-} from '@/components/ui/fieldset';
+import { ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/ui/fieldset';
 import { Input } from '@/components/ui/input';
 import { Text, TextLink } from '@/components/ui/text';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
+import { store } from '@/actions/App/Http/Controllers/Auth/RegisteredUserController';
+import { login } from '@/routes';
 
 export default function Register() {
     const { t } = useTranslation();
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, processing, submit, errors, reset } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
     });
 
-    const submit: FormEventHandler = (e) => {
+    const register: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('register'), {
+        submit(store(), {
             onFinish: () => reset('password', 'password_confirmation'),
         });
     };
@@ -35,7 +30,7 @@ export default function Register() {
         <>
             <Head title={t('Register')} />
 
-            <form onSubmit={submit} className={'mx-auto w-full sm:max-w-md'}>
+            <form onSubmit={register} className={'mx-auto w-full sm:max-w-md'}>
                 <Fieldset>
                     <Legend className={'sm:text-xl'}>Inscription</Legend>
 
@@ -45,18 +40,14 @@ export default function Register() {
                             <Input
                                 name="name"
                                 value={data.name}
-                                onChange={(e) =>
-                                    setData('name', e.target.value)
-                                }
+                                onChange={(e) => setData('name', e.target.value)}
                                 required
                                 autoFocus
                                 invalid={!!errors.name}
                                 type="text"
                                 autoComplete="name"
                             />
-                            {errors.name && (
-                                <ErrorMessage>{errors.name}</ErrorMessage>
-                            )}
+                            {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
                         </Field>
 
                         <Field>
@@ -64,17 +55,13 @@ export default function Register() {
                             <Input
                                 name="Email"
                                 value={data.email}
-                                onChange={(e) =>
-                                    setData('email', e.target.value)
-                                }
+                                onChange={(e) => setData('email', e.target.value)}
                                 required
                                 invalid={!!errors.email}
                                 type="email"
                                 autoComplete="email"
                             />
-                            {errors.email && (
-                                <ErrorMessage>{errors.email}</ErrorMessage>
-                            )}
+                            {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
                         </Field>
 
                         <Field>
@@ -83,16 +70,12 @@ export default function Register() {
                                 name="password"
                                 value={data.password}
                                 autoComplete="new-password"
-                                onChange={(e) =>
-                                    setData('password', e.target.value)
-                                }
+                                onChange={(e) => setData('password', e.target.value)}
                                 required
                                 invalid={!!errors.password}
                                 type="password"
                             />
-                            {errors.password && (
-                                <ErrorMessage>{errors.password}</ErrorMessage>
-                            )}
+                            {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
                         </Field>
 
                         <Field>
@@ -101,36 +84,21 @@ export default function Register() {
                                 name="password_confirmation"
                                 value={data.password_confirmation}
                                 autoComplete="new-password"
-                                onChange={(e) =>
-                                    setData(
-                                        'password_confirmation',
-                                        e.target.value,
-                                    )
-                                }
+                                onChange={(e) => setData('password_confirmation', e.target.value)}
                                 required
                                 invalid={!!errors.password_confirmation}
                                 type="password"
                             />
-                            {errors.password_confirmation && (
-                                <ErrorMessage>
-                                    {errors.password_confirmation}
-                                </ErrorMessage>
-                            )}
+                            {errors.password_confirmation && <ErrorMessage>{errors.password_confirmation}</ErrorMessage>}
                         </Field>
 
-                        <Button
-                            type="submit"
-                            className={'w-full'}
-                            disabled={processing}
-                        >
+                        <Button type="submit" className={'w-full'} disabled={processing}>
                             {t('Register')}
                         </Button>
 
                         <div className={'flex gap-2'}>
                             <Text>{t('Already registered?')}</Text>
-                            <TextLink href={route('login')}>
-                                {t('Login')}
-                            </TextLink>
+                            <TextLink href={login()}>{t('Login')}</TextLink>
                         </div>
                     </FieldGroup>
                 </Fieldset>

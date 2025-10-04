@@ -1,27 +1,23 @@
 import AppHead from '@/components/app-head';
 import { Button } from '@/components/ui/button';
-import {
-    ErrorMessage,
-    Field,
-    FieldGroup,
-    Label,
-} from '@/components/ui/fieldset';
+import { ErrorMessage, Field, FieldGroup, Label } from '@/components/ui/fieldset';
 import { Input } from '@/components/ui/input';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
+import { store } from '@/actions/App/Http/Controllers/Auth/ConfirmablePasswordController';
 
 export default function ConfirmPassword() {
     const { t } = useTranslation();
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, processing, submit, errors, reset } = useForm({
         password: '',
     });
 
-    const submit: FormEventHandler = (e) => {
+    const confirmPassword: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('password.confirm'), {
+        submit(store(), {
             onFinish: () => reset('password'),
         });
     };
@@ -31,12 +27,10 @@ export default function ConfirmPassword() {
             <AppHead title={t('Confirm Password')} />
 
             <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                {t(
-                    'This is a secure area of the application. Please confirm your password before continuing.',
-                )}
+                {t('This is a secure area of the application. Please confirm your password before continuing.')}
             </div>
 
-            <form onSubmit={submit}>
+            <form onSubmit={confirmPassword}>
                 <FieldGroup>
                     <Field>
                         <Label>{t('Password')}</Label>
@@ -45,15 +39,11 @@ export default function ConfirmPassword() {
                             name="password"
                             value={data.password}
                             autoFocus
-                            onChange={(e) =>
-                                setData('password', e.target.value)
-                            }
+                            onChange={(e) => setData('password', e.target.value)}
                             required
                             invalid={!!errors.password}
                         />
-                        {errors.password && (
-                            <ErrorMessage>{errors.password}</ErrorMessage>
-                        )}
+                        {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
                     </Field>
 
                     <div className="flex items-center justify-end gap-4">

@@ -1,10 +1,5 @@
 import { Button } from '@/components/ui/button';
-import {
-    ErrorMessage,
-    Field,
-    FieldGroup,
-    Label,
-} from '@/components/ui/fieldset';
+import { ErrorMessage, Field, FieldGroup, Label } from '@/components/ui/fieldset';
 import { Subheading } from '@/components/ui/heading';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
@@ -12,21 +7,14 @@ import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { update } from '@/routes/password';
 
 export default function UpdatePasswordForm() {
     const { t } = useTranslation();
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
-    const {
-        data,
-        setData,
-        errors,
-        put,
-        reset,
-        processing,
-        recentlySuccessful,
-    } = useForm({
+    const { data, setData, errors, submit, reset, processing, recentlySuccessful } = useForm({
         current_password: '',
         password: '',
         password_confirmation: '',
@@ -35,7 +23,7 @@ export default function UpdatePasswordForm() {
     const updatePassword: FormEventHandler = (e) => {
         e.preventDefault();
 
-        put(route('password.update'), {
+        submit(update(), {
             preserveScroll: true,
             onSuccess: () => reset(),
             onError: (errors) => {
@@ -56,11 +44,7 @@ export default function UpdatePasswordForm() {
         <section className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
             <div className="space-y-1">
                 <Subheading>{t('Update Password')}</Subheading>
-                <Text>
-                    {t(
-                        'Ensure your account is using a long, random password to stay secure.',
-                    )}
-                </Text>
+                <Text>{t('Ensure your account is using a long, random password to stay secure.')}</Text>
             </div>
 
             <form onSubmit={updatePassword}>
@@ -72,18 +56,12 @@ export default function UpdatePasswordForm() {
                             type="password"
                             name="current_password"
                             value={data.current_password}
-                            onChange={(e) =>
-                                setData('current_password', e.target.value)
-                            }
+                            onChange={(e) => setData('current_password', e.target.value)}
                             required
                             autoComplete="current-password"
                             invalid={!!errors.current_password}
                         />
-                        {errors.current_password && (
-                            <ErrorMessage>
-                                {errors.current_password}
-                            </ErrorMessage>
-                        )}
+                        {errors.current_password && <ErrorMessage>{errors.current_password}</ErrorMessage>}
                     </Field>
 
                     <Field>
@@ -93,16 +71,12 @@ export default function UpdatePasswordForm() {
                             type="password"
                             name="password"
                             value={data.password}
-                            onChange={(e) =>
-                                setData('password', e.target.value)
-                            }
+                            onChange={(e) => setData('password', e.target.value)}
                             required
                             autoComplete="new-password"
                             invalid={!!errors.password}
                         />
-                        {errors.password && (
-                            <ErrorMessage>{errors.password}</ErrorMessage>
-                        )}
+                        {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
                     </Field>
 
                     <Field>
@@ -111,18 +85,12 @@ export default function UpdatePasswordForm() {
                             type="password"
                             name="password_confirmation"
                             value={data.password_confirmation}
-                            onChange={(e) =>
-                                setData('password_confirmation', e.target.value)
-                            }
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
                             required
                             autoComplete="new-password"
                             invalid={!!errors.password_confirmation}
                         />
-                        {errors.password_confirmation && (
-                            <ErrorMessage>
-                                {errors.password_confirmation}
-                            </ErrorMessage>
-                        )}
+                        {errors.password_confirmation && <ErrorMessage>{errors.password_confirmation}</ErrorMessage>}
                     </Field>
 
                     <div className="flex items-center justify-end gap-4">
@@ -133,9 +101,7 @@ export default function UpdatePasswordForm() {
                             leave="transition ease-in-out"
                             leaveTo="opacity-0"
                         >
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {t('Saved.')}
-                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{t('Saved.')}</p>
                         </Transition>
 
                         <Button type="submit" disabled={processing}>
