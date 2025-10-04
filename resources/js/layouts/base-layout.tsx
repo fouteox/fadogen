@@ -33,7 +33,7 @@ export default function BaseLayout({ children }: PropsWithChildren) {
                 <Navbar className={'mx-auto max-w-6xl'}>
                     <NavbarSection className="max-lg:hidden">
                         {navItems.map((item) => (
-                            <NavbarItem key={item.href.url} href={item.href.url} current={currentPath === item.href.url}>
+                            <NavbarItem key={item.href} href={item.href} current={currentPath === item.href}>
                                 {t(item.title)}
                             </NavbarItem>
                         ))}
@@ -55,7 +55,7 @@ export default function BaseLayout({ children }: PropsWithChildren) {
                     <SidebarBody>
                         <SidebarSection>
                             {navItems.map((item) => (
-                                <SidebarItem key={item.href.url} href={item.href.url}>
+                                <SidebarItem key={item.href} href={item.href}>
                                     {t(item.title)}
                                 </SidebarItem>
                             ))}

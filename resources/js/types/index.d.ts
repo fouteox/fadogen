@@ -1,5 +1,4 @@
 import React, { ChangeEvent } from 'react';
-import { Config } from 'ziggy-js';
 
 export interface User {
     id: number;
@@ -11,7 +10,6 @@ export interface User {
 export interface NavItem {
     title: string;
     href: NonNullable<InertiaLinkProps['href']>;
-    icon?: LucideIcon | null;
     isActive?: boolean;
 }
 
