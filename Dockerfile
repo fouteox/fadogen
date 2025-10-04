@@ -41,6 +41,8 @@ COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json bun.lock* ./
 
 RUN bun install --frozen-lockfile
 
+COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
+
 RUN bun run build:ssr
 
 ###########################################
