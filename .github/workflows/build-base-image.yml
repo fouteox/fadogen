@@ -12,10 +12,10 @@ env:
   TEMP_REGISTRY: ghcr.io/${{ github.repository }}
   FINAL_REGISTRY: fouteox
   IMAGE_NAME: laravel-php-base
-  FRANKENPHP_VERSION: 1.7
+  FRANKENPHP_VERSION: 1.9
   NODE_VERSION: 22
-  BUN_VERSION: 1.2.19
-  SUPERCRONIC_VERSION: 0.2.34
+  BUN_VERSION: 1.2.23
+  SUPERCRONIC_VERSION: 0.2.37
 
 jobs:
   build-amd64:
