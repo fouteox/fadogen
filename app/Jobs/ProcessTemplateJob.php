@@ -172,10 +172,8 @@ final class ProcessTemplateJob implements ShouldQueue
 
         $this->commands[] = 'ddev composer run post-root-package-install';
         $this->commands[] = 'ddev php artisan key:generate --ansi';
-        
-        if ($config['javascript_package_manager'] === JavascriptPackageManagerEnum::Bun->value) {
-                $this->commands[] = 'docker run --rm -v ${PWD}:/app python:3-alpine python /app/.ddev/bun/package_json_updater.py';
-            }
+
+        $this->commands[] = 'rm package-lock.json';
 
         $this->installNodeDependencies();
 
