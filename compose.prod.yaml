@@ -42,7 +42,7 @@ services:
       SERVER_NAME: :80
     networks:
       - internal
-      - traefik
+      - web
     healthcheck:
       test: [ "CMD", "curl", "--fail", "localhost:8000/up" ]
       start_period: 5s
@@ -143,7 +143,7 @@ services:
       - 'stack-pgadmin:/var/lib/pgadmin'
     networks:
       - internal
-      - traefik
+      - web
     restart: always
     logging: *default-logging
     labels:
@@ -168,7 +168,7 @@ services:
       - 'stack-minio:/data/minio'
     networks:
       - internal
-      - traefik
+      - web
     command: 'minio server /data/minio --console-address ":8900"'
     restart: always
     logging: *default-logging
@@ -199,7 +199,7 @@ services:
 
 networks:
   internal:
-  traefik:
+  web:
     external: true
 
 volumes:
