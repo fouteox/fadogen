@@ -118,7 +118,6 @@ services:
     volumes:
       # - './postgresql.conf:/etc/postgresql/postgresql.conf'
       - 'stack-pgsql:/var/lib/postgresql/data'
-      - '../backup:/backup'
     networks: *default-network
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "${DB_DATABASE}", "-U", "${DB_USERNAME}"]
@@ -127,32 +126,6 @@ services:
       timeout: 20s
     restart: always
     logging: *default-logging
-    labels:
-      docker-volume-backup.stop-during-backup: true
-      docker-volume-backup.archive-pre: /bin/sh -c 'pg_dump -U ${DB_USERNAME} -F t ${DB_DATABASE} > /backup/${DB_DATABASE}-database.tar'
-
-  backup:
-    profiles: [administration]
-    image: offen/docker-volume-backup:v2
-    security_opt:
-      - no-new-privileges:true
-    environment:
-      BACKUP_FILENAME: backup-%Y-%m-%dT%H-%M-%S.tar.gz
-      BACKUP_PRUNING_PREFIX: backup-
-      BACKUP_CRON_EXPRESSION: "0 2 * * *" # run every day at 2am
-      BACKUP_RETENTION_DAYS: '7'
-    restart: always
-    depends_on:
-      pgsql:
-        condition: service_healthy
-    logging: *default-logging
-    networks: *default-network
-    volumes:
-      - stack-pgsql:/backup/pgsql:ro
-      - ../backup/volumes:/archive
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
 
   pgadmin:
     profiles: [ administration ]
