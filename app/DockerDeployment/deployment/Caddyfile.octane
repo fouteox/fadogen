@@ -10,7 +10,7 @@
 	metrics
 }
 
-{$SERVER_NAME} {
+{$CADDY_SERVER_SERVER_NAME} {
 	log {
 		level ERROR
 
