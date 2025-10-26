@@ -10,18 +10,11 @@
 	metrics
 }
 
-{$CADDY_SERVER_SERVER_NAME} {
+{$SERVER_NAME} {
 	log {
-		level WARN
+		level ERROR
 
-		format filter {
-			wrap {$CADDY_SERVER_LOGGER}
-			fields {
-				uri query {
-					replace authorization REDACTED
-				}
-			}
-		}
+		format json
 	}
 
 	route {
@@ -33,7 +26,7 @@
 		}
 
 		root * "{$APP_PUBLIC_PATH}"
-		encode zstd br gzip 
+		encode zstd br gzip
 
 		{$CADDY_SERVER_EXTRA_DIRECTIVES}
 
