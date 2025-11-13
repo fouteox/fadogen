@@ -3,7 +3,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.4",
@@ -19,8 +22,7 @@
         "laravel/wayfinder": "^0.1.12",
         "league/flysystem-aws-s3-v3": "^3.0",
         "spatie/laravel-data": "^4.13",
-        "symfony/yaml": "^7.2",
-        "tightenco/ziggy": "^2.5"
+        "symfony/yaml": "^7.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -54,6 +56,7 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+            "@php artisan boost:update --ansi",
             "@php artisan lang:update"
         ],
         "post-root-package-install": [

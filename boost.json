@@ -1,0 +1,9 @@
+{
+    "agents": [
+        "claude_code",
+        "copilot",
+        "cursor",
+        "phpstorm"
+    ],
+    "guidelines": []
+}
