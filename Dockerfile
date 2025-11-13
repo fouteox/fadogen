@@ -45,6 +45,8 @@ RUN bun install --frozen-lockfile
 
 COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
 
+RUN composer dump-autoload --classmap-authoritative --no-dev
+
 RUN bun run build:ssr
 
 ###########################################
