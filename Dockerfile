@@ -27,8 +27,10 @@ COPY --link --chown=${WWWUSER}:${WWWGROUP} composer.json composer.lock ./
 RUN composer install \
     --no-dev \
     --no-interaction \
+    --no-autoloader \
     --no-ansi \
     --no-scripts \
+    --no-progress \
     --audit
 
 ###########################################
@@ -57,5 +59,4 @@ COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/node_modules nod
 RUN mkdir -p ${ROOT}/storage/framework/{sessions,views,cache,testing} ${ROOT}/storage/logs ${ROOT}/bootstrap/cache \
     && chmod -R a+rw ${ROOT}/storage ${ROOT}/bootstrap/cache
 
-RUN composer dump-autoload --classmap-authoritative --no-dev --no-scripts \
-    && composer clear-cache
+RUN composer dump-autoload --classmap-authoritative --no-dev
