@@ -16,6 +16,8 @@ x-base: &base
     ssr:
       condition: service_healthy
   image: ${IMAGE_NAME:-app}:latest
+  env_file:
+    - .env.production
   ulimits:
     nofile:
       soft: 20000
@@ -33,8 +35,6 @@ services:
     <<: *base
     build:
       target: app
-      args:
-        APP_ENV: 'production' # to load .env.production
     command: ["php", "/var/www/html/artisan", "octane:start", "--server=frankenphp", "--port=8000"]
     stop_signal: SIGTERM
     environment:
