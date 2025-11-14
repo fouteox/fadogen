@@ -9,20 +9,12 @@ USER root
 
 RUN install-php-extensions bcmath
 
-USER www-data
-
 ############################################
 # Builder Stage
 ############################################
 FROM base AS builder
 
-USER root
-
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
-
-USER www-data
-
-WORKDIR /var/www/html
 
 COPY --link --chown=www-data:www-data composer.json composer.lock ./
 
@@ -44,18 +36,20 @@ RUN composer dump-autoload --classmap-authoritative --no-dev
 
 RUN bun run build:ssr
 
+USER www-data
+
 ############################################
 # App Image
 ############################################
 FROM base AS app
-
-WORKDIR /var/www/html
 
 COPY --link --chown=www-data:www-data --from=builder /var/www/html/vendor ./vendor
 
 COPY --link --chown=www-data:www-data . .
 
 COPY --link --chown=www-data:www-data --from=builder /var/www/html/public/build ./public/build
+
+USER www-data
 
 ############################################
 # SSR Image
