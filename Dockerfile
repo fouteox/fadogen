@@ -9,16 +9,16 @@ USER root
 
 RUN install-php-extensions bcmath
 
+USER www-data
+
 ############################################
 # Builder Stage
 ############################################
 FROM base AS builder
 
-USER root
-
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 
-COPY --link --chown=www-data:www-data composer.json composer.lock ./
+COPY --link composer.json composer.lock ./
 
 RUN composer install \
     --no-dev \
@@ -28,11 +28,11 @@ RUN composer install \
     --no-scripts \
     --audit
 
-COPY --link --chown=www-data:www-data package*.json bun.lock* ./
+COPY --link package*.json bun.lock* ./
 
 RUN bun install --frozen-lockfile
 
-COPY --link --chown=www-data:www-data . .
+COPY --link . .
 
 RUN composer dump-autoload --classmap-authoritative --no-dev
 
@@ -43,13 +43,11 @@ RUN bun run build:ssr
 ############################################
 FROM base AS app
 
-USER root
+COPY --link --from=builder /var/www/html/vendor ./vendor
 
-COPY --link --chown=www-data:www-data --from=builder /var/www/html/vendor ./vendor
+COPY --link . .
 
-COPY --link --chown=www-data:www-data . .
-
-COPY --link --chown=www-data:www-data --from=builder /var/www/html/public/build ./public/build
+COPY --link --from=builder /var/www/html/public/build ./public/build
 
 USER www-data
 
