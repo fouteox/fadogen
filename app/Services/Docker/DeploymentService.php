@@ -430,7 +430,7 @@ final class DeploymentService
     private function replaceNodeWithBun(string $content): string
     {
         $content = str_replace('COPY --link package*.json ./', 'COPY --link package.json bun.lock* ./', $content);
-        $content = str_replace('COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json ./', 'COPY --link --chown=${WWWUSER}:${WWWGROUP} package.json bun.lock* ./', $content);
+        $content = str_replace('COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json package-lock.json* ./', 'COPY --link --chown=${WWWUSER}:${WWWGROUP} package.json bun.lock* ./', $content);
 
         $content = str_replace('RUN npm install', 'RUN bun install --frozen-lockfile', $content);
 

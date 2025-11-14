@@ -20,45 +20,31 @@ COPY --chown=${USER}:${USER} deployment/supervisord.*.conf /etc/supervisor/conf.
 
 ###########################################
 
-FROM base AS common
+FROM base AS prod
 
 COPY --link --chown=${WWWUSER}:${WWWGROUP} composer.json composer.lock ./
 
 RUN composer install \
     --no-dev \
     --no-interaction \
+    --no-autoloader \
     --no-ansi \
     --no-scripts \
+    --no-progress \
     --audit
 
-###########################################
-# Build frontend assets
-###########################################
-
-FROM common AS build
-
-COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json ./
+COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json package-lock.json* ./
 
 RUN npm install
 
 COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
 
+RUN composer dump-autoload --classmap-authoritative --no-dev
+
 RUN npm run build:ssr
-
-###########################################
-
-FROM common AS prod
-
-COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/public public
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/bootstrap/ssr bootstrap/ssr
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/node_modules node_modules
 
 RUN mkdir -p ${ROOT}/storage/framework/{sessions,views,cache,testing} ${ROOT}/storage/logs ${ROOT}/bootstrap/cache \
     && mkdir -p ${ROOT}/database/database \
     && touch ${ROOT}/database/database/database.sqlite \
     && chmod 664 ${ROOT}/database/database/database.sqlite \
     && chmod -R a+rw ${ROOT}/storage ${ROOT}/bootstrap/cache ${ROOT}/database/database
-
-RUN composer dump-autoload --classmap-authoritative --no-dev --no-scripts \
-    && composer clear-cache

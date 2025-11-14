@@ -20,7 +20,7 @@ COPY --chown=${USER}:${USER} deployment/supervisord.*.conf /etc/supervisor/conf.
 
 ###########################################
 
-FROM base AS common
+FROM base AS prod
 
 COPY --link --chown=${WWWUSER}:${WWWGROUP} composer.json composer.lock ./
 
@@ -33,12 +33,6 @@ RUN composer install \
     --no-progress \
     --audit
 
-###########################################
-# Build frontend assets
-###########################################
-
-FROM common AS build
-
 COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json bun.lock* ./
 
 RUN bun install --frozen-lockfile
@@ -49,16 +43,5 @@ RUN composer dump-autoload --classmap-authoritative --no-dev
 
 RUN bun run build:ssr
 
-###########################################
-
-FROM common AS prod
-
-COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/public public
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/bootstrap/ssr bootstrap/ssr
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/node_modules node_modules
-
 RUN mkdir -p ${ROOT}/storage/framework/{sessions,views,cache,testing} ${ROOT}/storage/logs ${ROOT}/bootstrap/cache \
     && chmod -R a+rw ${ROOT}/storage ${ROOT}/bootstrap/cache
-
-RUN composer dump-autoload --classmap-authoritative --no-dev
