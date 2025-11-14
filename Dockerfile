@@ -1,28 +1,30 @@
 ARG PHP_VERSION=8.4
 
-FROM fouteox/laravel-php-base:${PHP_VERSION} AS base
+############################################
+# Base Stage
+############################################
+FROM serversideup/php:beta-${PHP_VERSION}-frankenphp AS base
 
-ARG WWWUSER=1000
-ARG WWWGROUP=1000
+USER root
 
-ENV USER=www-data \
-    ROOT=/app
+RUN install-php-extensions bcmath
 
-RUN userdel --remove --force www-data \
-    && groupadd --force -g ${WWWGROUP} ${USER} \
-    && useradd -ms /bin/bash --no-log-init --no-user-group -g ${WWWGROUP} -u ${WWWUSER} ${USER} \
-    && chown -R ${USER}:${USER} ${ROOT} /var/{log,run}
+USER www-data
 
-USER ${USER}
+############################################
+# Builder Stage
+############################################
+FROM base AS builder
 
-COPY --chown=${USER}:${USER} deployment/supervisord.conf /etc/
-COPY --chown=${USER}:${USER} deployment/supervisord.*.conf /etc/supervisor/conf.d/
+USER root
 
-###########################################
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 
-FROM base AS prod
+USER www-data
 
-COPY --link --chown=${WWWUSER}:${WWWGROUP} composer.json composer.lock ./
+WORKDIR /var/www/html
+
+COPY --link --chown=www-data:www-data composer.json composer.lock ./
 
 RUN composer install \
     --no-dev \
@@ -30,18 +32,42 @@ RUN composer install \
     --no-autoloader \
     --no-ansi \
     --no-scripts \
-    --no-progress \
     --audit
 
-COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json bun.lock* ./
+COPY --link --chown=www-data:www-data package*.json bun.lock* ./
 
 RUN bun install --frozen-lockfile
 
-COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
+COPY --link --chown=www-data:www-data . .
 
 RUN composer dump-autoload --classmap-authoritative --no-dev
 
 RUN bun run build:ssr
 
-RUN mkdir -p ${ROOT}/storage/framework/{sessions,views,cache,testing} ${ROOT}/storage/logs ${ROOT}/bootstrap/cache \
-    && chmod -R a+rw ${ROOT}/storage ${ROOT}/bootstrap/cache
+############################################
+# App Image
+############################################
+FROM base AS app
+
+WORKDIR /var/www/html
+
+COPY --link --chown=www-data:www-data --from=builder /var/www/html/vendor ./vendor
+
+COPY --link --chown=www-data:www-data . .
+
+COPY --link --chown=www-data:www-data --from=builder /var/www/html/public/build ./public/build
+
+############################################
+# SSR Image
+############################################
+FROM node:24-alpine AS ssr
+
+WORKDIR /app
+
+COPY --from=builder /var/www/html/bootstrap/ssr ./bootstrap/ssr
+
+COPY --from=builder /var/www/html/node_modules ./node_modules
+
+EXPOSE 13714
+
+CMD ["node", "bootstrap/ssr/ssr.js"]
