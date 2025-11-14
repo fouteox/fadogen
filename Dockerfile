@@ -49,8 +49,6 @@ COPY --link . .
 
 COPY --link --from=builder /var/www/html/public/build ./public/build
 
-USER www-data
-
 ############################################
 # SSR Image
 ############################################
