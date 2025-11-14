@@ -52,8 +52,12 @@ jobs:
           target: app
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=app
+            type=gha,scope=shared
+          cache-to: |
+            type=gha,mode=max,scope=app
+            type=gha,mode=max,scope=shared
 
       - name: Extract metadata for SSR image
         id: meta-ssr
@@ -73,8 +77,12 @@ jobs:
           target: ssr
           tags: ${{ steps.meta-ssr.outputs.tags }}
           labels: ${{ steps.meta-ssr.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=ssr
+            type=gha,scope=shared
+          cache-to: |
+            type=gha,mode=max,scope=ssr
+            type=gha,mode=max,scope=shared
 
   deploy:
     needs: build
