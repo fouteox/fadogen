@@ -9,8 +9,6 @@ USER root
 
 RUN install-php-extensions bcmath
 
-USER www-data
-
 ############################################
 # Builder Stage
 ############################################
@@ -43,11 +41,13 @@ RUN bun run build:ssr
 ############################################
 FROM base AS app
 
-COPY --link --from=builder /var/www/html/vendor ./vendor
+COPY --link --chown=33:33 --from=builder /var/www/html/vendor ./vendor
 
-COPY --link . .
+COPY --link --chown=33:33 . .
 
-COPY --link --from=builder /var/www/html/public/build ./public/build
+COPY --link --chown=33:33 --from=builder /var/www/html/public/build ./public/build
+
+USER www-data
 
 ############################################
 # SSR Image
