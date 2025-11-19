@@ -14,7 +14,7 @@ RUN install-php-extensions bcmath
 ############################################
 FROM base AS builder
 
-COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=oven/bun:1.3-debian /usr/local/bin/bun /usr/local/bin/bun
 
 COPY --link composer.json composer.lock ./
 
@@ -52,7 +52,7 @@ USER www-data
 ############################################
 # SSR Image
 ############################################
-FROM node:24-alpine AS ssr
+FROM oven/bun:1.3-debian AS ssr
 
 WORKDIR /app
 
@@ -62,4 +62,4 @@ COPY --from=builder /var/www/html/node_modules ./node_modules
 
 EXPOSE 13714
 
-CMD ["node", "bootstrap/ssr/ssr.js"]
+CMD ["bun", "bootstrap/ssr/ssr.js"]
