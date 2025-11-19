@@ -25,8 +25,8 @@ x-base: &base
   security_opt:
     - no-new-privileges:true
   volumes:
-    - 'app_public:/app/storage/app/public'
-    - 'app_logs:/app/storage/logs'
+    - 'storage_public:/app/storage/app/public'
+    - 'storage_logs:/app/storage/logs'
   logging: *default-logging
   restart: always
 
@@ -227,8 +227,8 @@ networks:
     external: true
 
 volumes:
-  app_public:
-  app_logs:
+  storage_public:
+  storage_logs:
   stack-pgsql:
   stack-pgadmin:
   stack-valkey:
