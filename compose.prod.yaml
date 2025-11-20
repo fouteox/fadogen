@@ -38,8 +38,10 @@ services:
     command: ["php", "/var/www/html/artisan", "octane:start", "--server=frankenphp", "--port=8000"]
     stop_signal: SIGTERM
     environment:
+      AUTORUN_ENABLED: true
       INERTIA_SSR_URL: http://ssr:13714
       INERTIA_SSR_ENSURE_BUNDLE_EXISTS: false
+      PHP_OPCACHE_ENABLE: "1"
     networks:
       - internal
       - web
@@ -80,17 +82,17 @@ services:
       test: ["CMD", "healthcheck-schedule"]
       start_period: 10s
 
-  reverb:
-    <<: *base
-    command: ["php", "/var/www/html/artisan", "reverb:start", "--port=8080"]
-    stop_signal: SIGTERM
-    networks: *default-network
-    depends_on:
-      app:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "healthcheck-reverb"]
-      start_period: 10s
+#  reverb:
+#    <<: *base
+#    command: ["php", "/var/www/html/artisan", "reverb:start", "--port=8080"]
+#    stop_signal: SIGTERM
+#    networks: *default-network
+#    depends_on:
+#      app:
+#        condition: service_healthy
+#    healthcheck:
+#      test: ["CMD", "healthcheck-reverb"]
+#      start_period: 10s
 
   ssr:
     image: ${IMAGE_NAME:-app}:ssr
@@ -153,84 +155,14 @@ services:
     restart: always
     logging: *default-logging
 
-  pgadmin:
-    image: 'dpage/pgadmin4:latest'
-    security_opt:
-      - no-new-privileges:true
-    depends_on:
-      pgsql:
-        condition: service_healthy
-    environment:
-      PGADMIN_DEFAULT_EMAIL: '${PGADMIN_DEFAULT_EMAIL}'
-      PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD}'
-      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'True'
-    volumes:
-      - 'stack-pgadmin:/var/lib/pgadmin'
-    networks:
-      - internal
-      - web
-    restart: always
-    logging: *default-logging
-    labels:
-      traefik.enable: true
-      traefik.http.routers.pgadmin.rule: Host(`pgadmin.${APP_LOCALHOST}`)
-      traefik.http.routers.pgadmin.entryPoints: web
-      traefik.http.routers.pgadmin.middlewares: "pgadmin-auth,pgadmin-retry"
-      traefik.http.middlewares.pgadmin-retry.retry.attempts: 4
-      traefik.http.middlewares.pgadmin-retry.retry.initialinterval: 100ms
-      traefik.http.middlewares.pgadmin-auth.basicauth.removeheader: true
-      traefik.http.middlewares.pgadmin-auth.basicauth.users: "user:$$2y$$05$$8zbpsdxg9wDiiKdqxiB0zeAlxZtG68P1SDBOvCN4IooLFewLx70Gm" # user:123456
-
-  minio:
-    image: 'minio/minio:latest'
-    security_opt:
-      - no-new-privileges:true
-    environment:
-      MINIO_ROOT_USER: '${MINIO_ROOT_USER}'
-      MINIO_ROOT_PASSWORD: '${MINIO_ROOT_PASSWORD}'
-    volumes:
-      - 'stack-minio:/data/minio'
-    networks:
-      - internal
-      - web
-    command: 'minio server /data/minio --console-address ":8900"'
-    restart: always
-    logging: *default-logging
-    labels:
-      traefik.enable: true
-
-      traefik.http.routers.minio-console.rule: Host(`minio-console.${APP_LOCALHOST}`)
-      traefik.http.routers.minio-console.entryPoints: web
-      traefik.http.routers.minio-console.service: minio-console-service
-      traefik.http.routers.minio-console.middlewares: "minio-auth,minio-retry"
-      traefik.http.services.minio-console-service.loadbalancer.server.port: 8900
-
-      traefik.http.routers.minio.rule: Host(`minio.${APP_LOCALHOST}`)
-      traefik.http.routers.minio.entryPoints: web
-      traefik.http.routers.minio.service: minio-service
-      traefik.http.routers.minio.middlewares: "minio-retry,minio-compress"
-      traefik.http.services.minio-service.loadbalancer.server.port: 9000
-
-      traefik.http.middlewares.minio-compress.compress: true
-      traefik.http.middlewares.minio-retry.retry.attempts: 4
-      traefik.http.middlewares.minio-retry.retry.initialinterval: 100ms
-      traefik.http.middlewares.minio-auth.basicauth.removeheader: true
-      traefik.http.middlewares.minio-auth.basicauth.users: "user:$$2y$$05$$8zbpsdxg9wDiiKdqxiB0zeAlxZtG68P1SDBOvCN4IooLFewLx70Gm" # user:123456
-    healthcheck:
-      test: [ "CMD", "mc", "ready", "local" ]
-      retries: 3
-      timeout: 5s
-
 networks:
   internal:
-  web:
+  proxy:
     external: true
 
 volumes:
   storage_public:
   storage_logs:
   stack-pgsql:
-  stack-pgadmin:
   stack-valkey:
-  stack-minio:
 
