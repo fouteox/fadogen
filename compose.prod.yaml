@@ -49,6 +49,9 @@ services:
     labels:
       traefik.enable: true
       traefik.http.routers.fadogen.rule: Host(`${APP_HOST}`)
+      traefik.http.routers.fadogen.entrypoints: websecure
+      traefik.http.routers.fadogen.tls: true
+      traefik.http.routers.fadogen.tls.certresolver: letsencrypt-digitalocean
       traefik.http.services.fadogen.loadbalancer.server.port: 8000
       # Health check
       traefik.http.services.fadogen.loadbalancer.healthcheck.path: "/up"
