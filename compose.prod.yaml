@@ -11,8 +11,6 @@ x-base: &base
       condition: service_healthy
     valkey:
       condition: service_healthy
-    minio:
-      condition: service_healthy
     ssr:
       condition: service_healthy
   image: ${IMAGE_NAME:-app}:latest
