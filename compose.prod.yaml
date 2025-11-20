@@ -44,7 +44,7 @@ services:
       PHP_OPCACHE_ENABLE: "1"
     networks:
       - internal
-      - web
+      - proxy
     healthcheck:
       test: ["CMD", "healthcheck-octane"]
       start_period: 10s
