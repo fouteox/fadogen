@@ -125,7 +125,7 @@ services:
     logging: *default-logging
     networks: *default-network
     healthcheck:
-      test: [ "CMD", "valkey-cli", "ping" ]
+      test: [ "CMD", "valkey-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       retries: 3
       timeout: 5s
     restart: always
