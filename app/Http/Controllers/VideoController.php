@@ -16,13 +16,13 @@ final class VideoController extends Controller
     {
         $videoPath = 'demo_fadogen.mp4';
 
-        if (! Storage::exists($videoPath)) {
+        if (! Storage::disk('s3')->exists($videoPath)) {
             abort(404, 'Video not found');
         }
 
         $mimeType = 'video/mp4';
-        $size = Storage::size($videoPath);
-        $stream = Storage::readStream($videoPath);
+        $size = Storage::disk('s3')->size($videoPath);
+        $stream = Storage::disk('s3')->readStream($videoPath);
 
         $start = 0;
         $end = $size - 1;

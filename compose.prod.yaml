@@ -131,12 +131,11 @@ services:
     restart: always
 
   pgsql:
-    image: 'postgres:17-bookworm'
+    image: 'postgres:18'
     ulimits:
       nofile:
         soft: 20000
         hard: 40000
-        # command: ["-c", "config_file=/etc/postgresql/postgresql.conf"]
     security_opt:
       - no-new-privileges:true
     environment:
@@ -145,8 +144,7 @@ services:
       POSTGRES_USER: '${DB_USERNAME}'
       POSTGRES_PASSWORD: '${DB_PASSWORD}'
     volumes:
-      # - './postgresql.conf:/etc/postgresql/postgresql.conf'
-      - 'stack-pgsql:/var/lib/postgresql/data'
+      - 'stack-pgsql:/var/lib/postgresql'
     networks: *default-network
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "${DB_DATABASE}", "-U", "${DB_USERNAME}"]
