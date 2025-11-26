@@ -23,8 +23,8 @@ x-base: &base
   security_opt:
     - no-new-privileges:true
   volumes:
-    - 'storage_public:/app/storage/app/public'
-    - 'storage_logs:/app/storage/logs'
+    - 'storage_public:/var/www/html/storage/app/public'
+    - 'storage_logs:/var/www/html/storage/logs'
   logging: *default-logging
   restart: always
 
@@ -120,14 +120,19 @@ services:
     command: [ "valkey-server", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "2gb" ]
     security_opt:
       - no-new-privileges:true
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
     volumes:
       - 'stack-valkey:/data'
+      - 'backup_dumps:/dumps'
     logging: *default-logging
     networks: *default-network
     healthcheck:
       test: [ "CMD", "valkey-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       retries: 3
       timeout: 5s
+    labels:
+      - docker-volume-backup.archive-pre=/bin/sh -c 'valkey-cli -a $$REDIS_PASSWORD BGSAVE && sleep 2 && cp /data/dump.rdb /dumps/valkey.rdb'
     restart: always
 
   pgsql:
@@ -145,14 +150,36 @@ services:
       POSTGRES_PASSWORD: '${DB_PASSWORD}'
     volumes:
       - 'stack-pgsql:/var/lib/postgresql'
+      - 'backup_dumps:/dumps'
     networks: *default-network
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "${DB_DATABASE}", "-U", "${DB_USERNAME}"]
       interval: 15s
       retries: 12
       timeout: 20s
+    labels:
+      - docker-volume-backup.archive-pre=/bin/sh -c 'pg_dump -U $$POSTGRES_USER -d $$POSTGRES_DB -F c -f /dumps/pgsql.dump'
     restart: always
+
+  backup:
+    image: offen/docker-volume-backup:v2
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      AWS_S3_BUCKET_NAME: "${BACKUP_S3_BUCKET}"
+      AWS_S3_PATH: "${BACKUP_S3_PATH}"
+      AWS_ACCESS_KEY_ID: "${BACKUP_AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${BACKUP_AWS_SECRET_ACCESS_KEY}"
+      AWS_ENDPOINT: "${BACKUP_AWS_ENDPOINT}"
+      BACKUP_CRON_EXPRESSION: "0 3 * * *"
+      BACKUP_RETENTION_DAYS: "${BACKUP_RETENTION_DAYS:-7}"
+    volumes:
+      - backup_dumps:/backup/dumps:ro
+      - storage_logs:/backup/logs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: *default-network
     logging: *default-logging
+    restart: always
 
 networks:
   internal:
@@ -164,4 +191,4 @@ volumes:
   storage_logs:
   stack-pgsql:
   stack-valkey:
-
+  backup_dumps:
