@@ -68,6 +68,12 @@ return [
             'throw' => false,
         ],
 
+        'generated-templates' => [
+            'driver' => 'local',
+            'root' => storage_path('app/generated-templates'),
+            'throw' => false,
+        ],
+
     ],
 
     /*

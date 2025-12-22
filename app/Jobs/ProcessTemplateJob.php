@@ -92,7 +92,7 @@ final class ProcessTemplateJob implements ShouldQueue
         File::delete($commandsPath);
         File::deleteDirectory($tempDir);
 
-        Storage::put($templateId.'.tar', File::get($archivePath));
+        Storage::disk('generated-templates')->put($templateId.'.tar', File::get($archivePath));
 
         File::delete($archivePath);
     }

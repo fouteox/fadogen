@@ -1,9 +1,6 @@
 {
     "agents": [
-        "claude_code",
-        "copilot",
-        "cursor",
-        "phpstorm"
+        "claude_code"
     ],
     "guidelines": []
 }

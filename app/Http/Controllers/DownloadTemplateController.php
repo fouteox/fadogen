@@ -24,13 +24,13 @@ final class DownloadTemplateController extends Controller
             return response('', SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        if (! Storage::exists($template->id.'.tar')) {
+        if (! Storage::disk('generated-templates')->exists($template->id.'.tar')) {
             return response('', SymfonyResponse::HTTP_NOT_FOUND);
         }
 
-        $archiveContent = Storage::get($template->id.'.tar');
+        $archiveContent = Storage::disk('generated-templates')->get($template->id.'.tar');
 
-        //        Storage::delete($template->id.'.tar');
+        //        Storage::disk('generated-templates')->delete($template->id.'.tar');
 
         $template->status = TemplateStatusEnum::Downloaded;
         $template->save();

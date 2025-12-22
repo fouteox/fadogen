@@ -34,7 +34,11 @@ COPY --link . .
 
 RUN composer dump-autoload --classmap-authoritative --no-dev
 
-RUN bun run build:ssr
+ARG ENV_HASH
+RUN --mount=type=secret,id=dotenv \
+    echo "Build with ENV_HASH=${ENV_HASH}" && \
+    set -a && . /run/secrets/dotenv && set +a && \
+    bun run build:ssr
 
 ############################################
 # App Image
@@ -50,6 +54,7 @@ COPY --link --chown=33:33 --from=builder /var/www/html/public/build ./public/bui
 RUN mkdir -p \
     storage/logs \
     storage/app/public \
+    storage/app/generated-templates \
     storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \

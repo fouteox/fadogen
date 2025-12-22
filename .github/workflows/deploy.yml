@@ -52,6 +52,10 @@ jobs:
           target: app
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
+          secrets: |
+            dotenv=.env.production
+          build-args: |
+            ENV_HASH=${{ hashFiles('.env.production') }}
           cache-from: |
             type=gha,scope=app
             type=gha,scope=shared
@@ -77,6 +81,10 @@ jobs:
           target: ssr
           tags: ${{ steps.meta-ssr.outputs.tags }}
           labels: ${{ steps.meta-ssr.outputs.labels }}
+          secrets: |
+            dotenv=.env.production
+          build-args: |
+            ENV_HASH=${{ hashFiles('.env.production') }}
           cache-from: |
             type=gha,scope=ssr
             type=gha,scope=shared
@@ -95,27 +103,12 @@ jobs:
 
     steps:
       - name: Install cloudflared
-        if: ${{ env.USE_CF_TUNNEL == 'true' }}
+        if: env.USE_CF_TUNNEL == 'true'
         run: |
           curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared.deb
 
-      - name: Setup SSH configuration (Cloudflare tunnel)
-        if: ${{ env.USE_CF_TUNNEL == 'true' }}
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          name: id_ed25519
-          known_hosts: unnecessary
-          config: |
-            Host ${{ secrets.SSH_HOST }}
-              ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h
-              User ${{ secrets.SSH_USER }}
-              IdentityFile ~/.ssh/id_ed25519
-              StrictHostKeyChecking accept-new
-
-      - name: Setup SSH configuration (Direct)
-        if: ${{ env.USE_CF_TUNNEL != 'true' }}
+      - name: Setup SSH configuration
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -124,9 +117,9 @@ jobs:
           config: |
             Host ${{ secrets.SSH_HOST }}
               User ${{ secrets.SSH_USER }}
-              Port ${{ secrets.SSH_PORT }}
               IdentityFile ~/.ssh/id_ed25519
               StrictHostKeyChecking accept-new
+              ${{ env.USE_CF_TUNNEL == 'true' && format('ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h', '') || format('Port {0}', secrets.SSH_PORT) }}
 
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -141,14 +134,91 @@ jobs:
           ssh ${{ secrets.SSH_HOST }} "mkdir -p ~/$REPO_SHORT_NAME"
           scp compose.prod.yaml .env.production ${{ secrets.SSH_HOST }}:~/$REPO_SHORT_NAME/
 
-      - name: Deploy with Docker context
+      - name: Deploy with Docker Compose
         env:
           REPO_SHORT_NAME: ${{ github.event.repository.name }}
           FULL_IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | ssh ${{ secrets.SSH_HOST }} "docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin"
+          ssh ${{ secrets.SSH_HOST }} << DEPLOY_SCRIPT
+            set -e
+            cd ~/${REPO_SHORT_NAME}
+            source .env.production
 
-          ssh ${{ secrets.SSH_HOST }} "cd ~/$REPO_SHORT_NAME && \
-            export IMAGE_NAME=$FULL_IMAGE_NAME && \
-            docker compose -f compose.prod.yaml --env-file .env.production pull && \
-            docker compose -f compose.prod.yaml --env-file .env.production up -d"
+            # Aliases
+            DC="docker compose -f compose.prod.yaml --env-file .env.production"
+            PROJECT="\${COMPOSE_PROJECT_NAME:-${REPO_SHORT_NAME}}"
+            aws_s3() { docker run --rm -e AWS_ACCESS_KEY_ID="\${BACKUP_AWS_ACCESS_KEY_ID}" -e AWS_SECRET_ACCESS_KEY="\${BACKUP_AWS_SECRET_ACCESS_KEY}" -e AWS_ENDPOINT_URL="https://\${BACKUP_AWS_ENDPOINT}" amazon/aws-cli "\$@"; }
+
+            # Service detection
+            DB="\${DB_CONNECTION}"
+            CACHE="\${REDIS_HOST:-}"
+            DB_VOL="stack-\${DB}"
+            CACHE_VOL="stack-\${CACHE}"
+
+            # First deploy check
+            FIRST_DEPLOY="no"
+            [ -n "\$DB" ] && [ "\$DB" != "sqlite" ] && ! docker volume inspect "\${PROJECT}_\${DB_VOL}" > /dev/null 2>&1 && FIRST_DEPLOY="yes"
+
+            # Pull images
+            echo "==> Pulling images..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            export IMAGE_NAME=${FULL_IMAGE_NAME}
+            \$DC pull
+
+            # Start data services
+            echo "==> Starting data services..."
+            SERVICES=""
+            [ -n "\$DB" ] && [ "\$DB" != "sqlite" ] && SERVICES="\$DB"
+            [ -n "\$CACHE" ] && SERVICES="\$SERVICES \$CACHE"
+            if [ "\$FIRST_DEPLOY" = "yes" ] && [ -n "\${BACKUP_S3_BUCKET:-}" ]; then
+              # First deploy with backup: start only DB, cache will start after restore
+              [ -n "\$DB" ] && [ "\$DB" != "sqlite" ] && \$DC up -d --wait \$DB
+            else
+              # Normal deploy: start all data services
+              [ -n "\$SERVICES" ] && \$DC up -d --wait \$SERVICES
+            fi
+
+            # Backup restoration (first deploy only)
+            if [ "\$FIRST_DEPLOY" = "yes" ] && [ -n "\${BACKUP_S3_BUCKET:-}" ]; then
+              if aws_s3 s3 ls "s3://\${BACKUP_S3_BUCKET}/\${BACKUP_S3_PATH}/" 2>/dev/null | grep -q '\.tar\.gz'; then
+                echo "==> Downloading backup..."
+                LATEST=\$(aws_s3 s3 ls "s3://\${BACKUP_S3_BUCKET}/\${BACKUP_S3_PATH}/" | grep '\.tar\.gz' | sort | tail -1 | awk '{print \$4}')
+                [ -n "\$LATEST" ] && {
+                  docker run --rm -v "\${PROJECT}_backup_dumps:/restore" \
+                    -e AWS_ACCESS_KEY_ID="\${BACKUP_AWS_ACCESS_KEY_ID}" \
+                    -e AWS_SECRET_ACCESS_KEY="\${BACKUP_AWS_SECRET_ACCESS_KEY}" \
+                    -e AWS_ENDPOINT_URL="https://\${BACKUP_AWS_ENDPOINT}" \
+                    amazon/aws-cli s3 cp "s3://\${BACKUP_S3_BUCKET}/\${BACKUP_S3_PATH}/\$LATEST" /restore/backup.tar.gz
+                  docker run --rm -v "\${PROJECT}_backup_dumps:/restore" alpine sh -c "tar -xzf /restore/backup.tar.gz -C /restore --strip-components=2 backup/dumps/ && rm /restore/backup.tar.gz"
+                }
+
+                echo "==> Restoring database..."
+                case "\$DB" in
+                  pgsql)
+                    \$DC exec -T pgsql test -f /dumps/pgsql.dump < /dev/null 2>/dev/null && \
+                      \$DC exec -T pgsql pg_restore -U "\${DB_USERNAME}" -d "\${DB_DATABASE}" -c --if-exists /dumps/pgsql.dump < /dev/null || true
+                    ;;
+                  mysql)
+                    \$DC exec -T mysql test -f /dumps/mysql.sql < /dev/null 2>/dev/null && \
+                      \$DC exec -T mysql sh -c 'mysql -u"\$MYSQL_USER" -p"\$MYSQL_PASSWORD" "\$MYSQL_DATABASE" < /dumps/mysql.sql' < /dev/null || true
+                    ;;
+                  mariadb)
+                    \$DC exec -T mariadb test -f /dumps/mariadb.sql < /dev/null 2>/dev/null && \
+                      \$DC exec -T mariadb sh -c 'mariadb -u"\$MARIADB_USER" -p"\$MARIADB_PASSWORD" "\$MARIADB_DATABASE" < /dumps/mariadb.sql' < /dev/null || true
+                    ;;
+                esac
+
+                # Cache: create volume via compose, copy dump, then start
+                if [ -n "\$CACHE" ]; then
+                  echo "==> Restoring cache..."
+                  \$DC create \$CACHE 2>/dev/null || true
+                  docker run --rm -v "\${PROJECT}_backup_dumps:/source:ro" -v "\${PROJECT}_\${CACHE_VOL}:/data" alpine cp /source/\${CACHE}.rdb /data/dump.rdb 2>/dev/null || true
+                  \$DC up -d --wait \$CACHE
+                fi
+              fi
+            fi
+
+            echo "==> Starting all services..."
+            \$DC up -d --wait
+            echo "==> Deployment complete!"
+          DEPLOY_SCRIPT

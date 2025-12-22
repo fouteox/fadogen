@@ -25,6 +25,7 @@ x-base: &base
   volumes:
     - 'storage_public:/var/www/html/storage/app/public'
     - 'storage_logs:/var/www/html/storage/logs'
+    - 'storage_templates:/var/www/html/storage/app/generated-templates'
   logging: *default-logging
   restart: always
 
@@ -189,6 +190,7 @@ networks:
 volumes:
   storage_public:
   storage_logs:
+  storage_templates:
   stack-pgsql:
   stack-valkey:
   backup_dumps:
