@@ -1,50 +1,97 @@
 ARG PHP_VERSION=8.4
+ARG NODE_VERSION=22
 
-FROM fouteox/laravel-php-base:${PHP_VERSION} AS base
+############################################
+# Builder Stage (PHP + Node/Bun pour build)
+############################################
+FROM serversideup/php:beta-${PHP_VERSION}-frankenphp AS builder
 
-ARG WWWUSER=1000
-ARG WWWGROUP=1000
+ARG NODE_VERSION
 
-ENV USER=www-data \
-    ROOT=/app
+USER root
 
-RUN userdel --remove --force www-data \
-    && groupadd --force -g ${WWWGROUP} ${USER} \
-    && useradd -ms /bin/bash --no-log-init --no-user-group -g ${WWWGROUP} -u ${WWWUSER} ${USER} \
-    && chown -R ${USER}:${USER} ${ROOT} /var/{log,run}
+# Installer Node.js par défaut
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x -o nodesource_setup.sh \
+    && bash nodesource_setup.sh \
+    && apt-get install -y nodejs \
+    && npm install -g npm \
+    && rm nodesource_setup.sh
 
-USER ${USER}
+# Installer Bun (optionnel - décommenter si nécessaire)
+# COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 
-COPY --chown=${USER}:${USER} deployment/supervisord.conf /etc/
-COPY --chown=${USER}:${USER} deployment/supervisord.*.conf /etc/supervisor/conf.d/
+# Copier les fichiers de dépendances
+COPY --link composer.json composer.lock ./
 
-###########################################
-
-FROM base AS prod
-
-COPY --link --chown=${WWWUSER}:${WWWGROUP} composer.json composer.lock ./
-
+# Installer les dépendances Composer
 RUN composer install \
     --no-dev \
     --no-interaction \
     --no-autoloader \
     --no-ansi \
     --no-scripts \
-    --no-progress \
     --audit
 
-COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json package-lock.json* ./
+# Copier les fichiers de dépendances frontend
+COPY --link package*.json package-lock.json* ./
 
-RUN npm install
+# Installer les dépendances frontend (utiliser npm par défaut)
+RUN npm ci --include=dev
+# RUN bun install --frozen-lockfile
 
-COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
+# Copier tout le code (nécessaire pour Laravel Wayfinder et autres outils de build)
+COPY --link . .
 
+# Générer l'autoload optimisé
 RUN composer dump-autoload --classmap-authoritative --no-dev
 
-RUN npm run build:ssr
+# Build frontend (adapter selon le projet)
+RUN npm run build
+# RUN bun run build
 
-RUN mkdir -p ${ROOT}/storage/framework/{sessions,views,cache,testing} ${ROOT}/storage/logs ${ROOT}/bootstrap/cache \
-    && mkdir -p ${ROOT}/database/database \
-    && touch ${ROOT}/database/database/database.sqlite \
-    && chmod 664 ${ROOT}/database/database/database.sqlite \
-    && chmod -R a+rw ${ROOT}/storage ${ROOT}/bootstrap/cache ${ROOT}/database/database
+# Pour Inertia SSR, builder également le bundle SSR
+# RUN npm run build:ssr
+# RUN bun run build:ssr
+
+############################################
+# App Image (PHP uniquement)
+############################################
+FROM serversideup/php:beta-${PHP_VERSION}-frankenphp AS app
+
+# Copier vendor depuis builder
+COPY --link --chown=33:33 --from=builder /var/www/html/vendor ./vendor
+
+# Copier le code source
+COPY --link --chown=33:33 . .
+
+# Copier les assets buildés depuis builder
+COPY --link --chown=33:33 --from=builder /var/www/html/public/build ./public/build
+
+USER www-data
+
+# Pour Inertia SSR : Ne PAS copier bootstrap/ssr ici (c'est pour le conteneur SSR)
+
+############################################
+# SSR Image (Node uniquement) - Optionnel
+############################################
+# Décommenter cette section si vous utilisez Inertia SSR
+# FROM node:${NODE_VERSION}-alpine AS ssr
+#
+# WORKDIR /app
+#
+# # Copier le bundle SSR depuis builder
+# COPY --from=builder /var/www/html/bootstrap/ssr ./bootstrap/ssr
+#
+# # Copier node_modules depuis builder (nécessaire pour le runtime)
+# COPY --from=builder /var/www/html/node_modules ./node_modules
+#
+# # Exposer le port SSR (par défaut 13714)
+# EXPOSE 13714
+#
+# # Démarrer le serveur SSR
+# CMD ["node", "bootstrap/ssr/ssr.js"]
+#
+# # Configuration Inertia SSR :
+# # 1. Dans config/inertia.php : 'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714')
+# # 2. Dans compose.prod.yaml : Ajouter un service 'ssr' avec target: ssr
+# # 3. Dans les services PHP : environment: INERTIA_SSR_URL=http://ssr:13714
