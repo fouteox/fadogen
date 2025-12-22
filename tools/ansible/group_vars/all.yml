@@ -1,2 +1,0 @@
----
-config: "{{ lookup('file', '/ansible/config.yml') | from_yaml }}"

@@ -13,7 +13,6 @@ use App\Enums\StarterKitEnum;
 use App\Enums\TemplateStatusEnum;
 use App\Enums\TestingFrameworkEnum;
 use App\Models\Template;
-use App\Services\Docker\DeploymentService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -37,12 +36,10 @@ final class ProcessTemplateJob implements ShouldQueue
     /**
      * @throws Throwable
      */
-    public function handle(DeploymentService $deploymentService): void
+    public function handle(): void
     {
         try {
             $this->generateCommands();
-
-            $this->generateDockerDeploymentFiles($deploymentService);
 
             $this->createArchive();
 
@@ -50,22 +47,6 @@ final class ProcessTemplateJob implements ShouldQueue
         } catch (Throwable $e) {
             $this->template->update(['status' => TemplateStatusEnum::Failed]);
             throw $e;
-        }
-    }
-
-    private function generateDockerDeploymentFiles(DeploymentService $deploymentService): void
-    {
-        $files = $deploymentService->generateDeploymentFiles($this->template->data);
-
-        $templateId = $this->template->id;
-        $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'build_'.$templateId.DIRECTORY_SEPARATOR.'deployment';
-
-        if (! File::exists($tempDir)) {
-            File::makeDirectory($tempDir, 0777, true);
-        }
-
-        foreach ($files as $filename => $content) {
-            File::put($tempDir.DIRECTORY_SEPARATOR.$filename, $content);
         }
     }
 

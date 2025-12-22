@@ -1,25 +1,13 @@
-# Fadogen - Build and deploy applications easily.
+# Fadogen (Archived)
 
-Fadogen is a tool that allows you to create applications and deploy them very easily. Think of it as the shadcn of deployment. No tools are required (except ddev).
+> **This project is no longer maintained.** I originally created this tool to address a personal need, but it has since been superseded by a more comprehensive solution.
 
-## Getting Started
-The easiest way to run this project is with DDEV, a Docker-based local development environment.
+## What's Next?
 
-### Prerequisites
-- [Install DDEV](https://ddev.readthedocs.io/en/stable/#installation)
+I've built [Fadogen](https://github.com/fadogen/app), a native macOS application that follows the same philosophy but covers significantly more use cases — from development to production.
 
-### Setup
-1. Clone this repository:
-   ```bash
-    git clone https://github.com/fouteox/fadogen.git
-    cd fadogen
-    ```
+Check out the documentation at [docs.fadogen.app](https://docs.fadogen.app) to learn more.
 
-2. Start the application:
-    ```bash
-    ddev start && ddev launch
-    ```
-    You can also use Herd, but it is not recommended for technical reasons (port conflict):
-    ```bash
-    make init
-    ```
+## Want to Continue This Project?
+
+If you find value in this web-based approach and would like to maintain it, feel free to fork this repository and make it your own.

@@ -1,8 +1,0 @@
----
-cloudflare_email: "{{ config.cloudflare.email }}"
-cloudflare_api_key: "{{ config.cloudflare.api_key }}"
-cloudflare_account_id: "{{ config.cloudflare.account_id }}"
-cloudflare_domain: "{{ config.cloudflare.domain }}"
-cloudflare_ssh_domain: "{{ config.cloudflare.ssh_domain }}"
-cloudflare_api: "https://api.cloudflare.com/client/v4"
-cloudflare_tunnel_name: "{{ config.raspberry.hostname }}"

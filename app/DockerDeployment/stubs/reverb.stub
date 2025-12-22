@@ -1,8 +1,0 @@
-reverb:
-    __BASE_REFERENCE__: true
-    environment:
-        CONTAINER_MODE: reverb
-    __BASE_NETWORKS__: true
-    depends_on:
-        app:
-            condition: service_healthy

@@ -1,3 +1,0 @@
----
-credential_user: "{{ config.raspberry.user }}"
-docker_credential_helper_url: "https://github.com/docker/docker-credential-helpers/releases/download/v0.9.3/docker-credential-pass-v0.9.3.linux-{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"

@@ -22,39 +22,6 @@ while IFS= read -r cmd <&3 || [ -n "$cmd" ]; do
     done
 exec 3<&-
 
-if [ -d "$TMP_DIR/deployment" ]; then
-    @env('local')
-        info "Moving deployment directory from TMP_DIR to project root..."
-    @endenv
-
-    mv "$TMP_DIR/deployment" ./
-    @env('local')
-        info "Deployment directory moved successfully"
-    @endenv
-
-    if [ -f "./deployment/Dockerfile" ]; then
-        mv "./deployment/Dockerfile" ./
-    fi
-
-    if [ -f "./deployment/compose.prod.yaml" ]; then
-        mv "./deployment/compose.prod.yaml" ./
-    fi
-
-    if [ -f "./deployment/deploy.yml" ]; then
-        mkdir -p ./.github/workflows
-        mv "./deployment/deploy.yml" ./.github/workflows/
-    fi
-
-    if [ -f "./deployment/.env.production" ]; then
-        mv "./deployment/.env.production" ./
-    fi
-
-    if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-        git add .
-        git commit -q -m "Add deployment files"
-    fi
-fi
-
 rm "$TMP_DIR/commands.sh"
 rm "$TMP_DIR/template.tar"
 
