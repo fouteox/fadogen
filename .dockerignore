@@ -8,3 +8,9 @@
 .data
 Dockerfile
 compose*.yaml
+
+# Environment files with secrets
+.env
+.env.*
+!.env.example
+!.env.production.dist
