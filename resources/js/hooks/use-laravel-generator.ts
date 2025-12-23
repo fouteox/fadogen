@@ -26,7 +26,7 @@ export const useLaravelForm = () => {
     // TODO : remove precognition
     const form = useForm('post', store().url, {
         project_name: '',
-        php_version: '8.4' as PhpVersion,
+        php_version: '8.5' as PhpVersion,
         database: 'sqlite' as DatabaseType,
         starter_kit: 'none' as Stack,
         custom_starter_kit: '',

@@ -31,7 +31,7 @@ export type QueueTypeValue = 'horizon' | 'native';
 export type PackageManager = 'npm' | 'bun';
 export type TestingFramework = 'pest' | 'phpunit';
 export type AuthProvider = 'laravel' | 'workos';
-export type PhpVersion = '8.2' | '8.3' | '8.4';
+export type PhpVersion = '8.3' | '8.4' | '8.5';
 export type DatabaseType = 'sqlite' | 'mysql' | 'mariadb' | 'pgsql';
 export type NotificationType = 'info' | 'success' | 'warning' | 'error';
 

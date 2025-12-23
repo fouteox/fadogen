@@ -96,9 +96,9 @@ export const BasicInformation = ({
                     invalid={!!errors.php_version}
                     isAutoDetected={isFieldAutoDetected('php_version')}
                 >
-                    <option value="8.4">8.4 ({t('Recommended')})</option>
+                    <option value="8.5">8.5 ({t('Recommended')})</option>
+                    <option value="8.4">8.4</option>
                     <option value="8.3">8.3</option>
-                    <option value="8.2">8.2</option>
                 </Select>
                 {isFieldAutoDetected('php_version') && (
                     <InfoMessage>{t('Auto-detected value')}</InfoMessage>
