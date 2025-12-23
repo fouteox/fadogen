@@ -20,15 +20,7 @@ export default defineConfig({
     esbuild: {
         jsx: 'automatic',
     },
-    ...(process.env.DDEV_PRIMARY_URL && {
-        server: {
-            host: '0.0.0.0',
-            port: 5173,
-            strictPort: true,
-            origin: `${process.env.DDEV_PRIMARY_URL}:5173`,
-            cors: {
-                origin: process.env.DDEV_PRIMARY_URL,
-            },
-        },
-    }),
+    ssr: {
+        noExternal: true,
+    },
 });

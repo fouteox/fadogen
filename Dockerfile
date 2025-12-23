@@ -72,8 +72,6 @@ WORKDIR /app
 
 COPY --from=builder /var/www/html/bootstrap/ssr ./bootstrap/ssr
 
-COPY --from=builder /var/www/html/node_modules ./node_modules
-
 EXPOSE 13714
 
 CMD ["bun", "bootstrap/ssr/ssr.js"]
