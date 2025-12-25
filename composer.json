@@ -73,12 +73,12 @@
         "test:unit": "pest --parallel --coverage --exactly=99.4",
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "bunx concurrently -c \"#c4b5fd,#fdba74\" \"php artisan horizon\" \"bun run dev\" --names=queue,vite --kill-others"
+            "bunx concurrently -c \"#c4b5fd,#fdba74,#93c5fd\" \"php artisan horizon\" \"bun run dev\" \"php artisan schedule:work\" --names=horizon,vite,scheduler --kill-others"
         ],
         "dev:ssr": [
             "bun run build:ssr",
             "Composer\\Config::disableProcessTimeout",
-            "bunx concurrently -c \"#c4b5fd,#fdba74\" \"php artisan horizon\" \"php artisan inertia:start-ssr\" --names=queue,ssr --kill-others"
+            "bunx concurrently -c \"#c4b5fd,#fdba74,#93c5fd\" \"php artisan horizon\" \"php artisan inertia:start-ssr\" \"php artisan schedule:work\" --names=horizon,ssr,scheduler --kill-others"
         ]
     },
     "extra": {
