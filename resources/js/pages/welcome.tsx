@@ -29,13 +29,20 @@ const Welcome: React.FC = () => {
                     href={getDocsUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mb-8 flex items-center justify-center gap-3 rounded-lg bg-gradient-to-r from-zinc-800 to-zinc-900 px-4 py-3 text-white ring-1 ring-zinc-700 transition-all hover:from-zinc-700 hover:to-zinc-800 dark:from-zinc-800 dark:to-zinc-900 dark:ring-zinc-600 dark:hover:from-zinc-700 dark:hover:to-zinc-800"
+                    className="mb-8 flex flex-col items-center gap-2 rounded-lg bg-gradient-to-r from-zinc-800 to-zinc-900 px-4 py-3 text-white ring-1 ring-zinc-700 transition-all hover:from-zinc-700 hover:to-zinc-800 md:gap-3 md:py-4 lg:flex-row lg:justify-center dark:from-zinc-800 dark:to-zinc-900 dark:ring-zinc-600 dark:hover:from-zinc-700 dark:hover:to-zinc-800"
                 >
-                    <Apple className="size-5" />
-                    <span className="text-sm font-medium sm:text-base">
+                    <span className="flex items-center gap-2">
+                        <Apple className="size-5 md:size-6" />
+                        <span className="rounded bg-white/20 px-2 py-0.5 text-xs font-semibold lg:hidden">
+                            {t('New')}
+                        </span>
+                    </span>
+                    <span className="text-center text-sm font-medium md:text-base lg:text-left">
                         {t('Native macOS app available with even more features!')}
                     </span>
-                    <span className="rounded bg-white/20 px-2 py-0.5 text-xs font-semibold">{t('New')}</span>
+                    <span className="hidden rounded bg-white/20 px-2 py-0.5 text-xs font-semibold lg:inline">
+                        {t('New')}
+                    </span>
                 </a>
 
                 {/* Hero Section */}
