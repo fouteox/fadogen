@@ -4,25 +4,43 @@ import { Heading, Subheading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
 import SimpleVideoPlayer from '@/components/video-player';
 import { Head, WhenVisible } from '@inertiajs/react';
-import { Heart, Rocket } from 'lucide-react';
+import { Apple, Heart, Rocket } from 'lucide-react';
 import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { index } from '@/routes/generator';
 
 const Welcome: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+
+    const getDocsUrl = () => {
+        const lang = i18n.language;
+        if (lang === 'fr') return 'https://docs.fadogen.app/fr';
+        if (lang === 'de') return 'https://docs.fadogen.app/de';
+        return 'https://docs.fadogen.app';
+    };
 
     return (
         <>
             <Head title={t('Welcome')} />
 
             <div className="mx-auto flex max-w-5xl flex-col">
+                {/* Native App Announcement */}
+                <a
+                    href={getDocsUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mb-8 flex items-center justify-center gap-3 rounded-lg bg-gradient-to-r from-zinc-800 to-zinc-900 px-4 py-3 text-white ring-1 ring-zinc-700 transition-all hover:from-zinc-700 hover:to-zinc-800 dark:from-zinc-800 dark:to-zinc-900 dark:ring-zinc-600 dark:hover:from-zinc-700 dark:hover:to-zinc-800"
+                >
+                    <Apple className="size-5" />
+                    <span className="text-sm font-medium sm:text-base">
+                        {t('Native macOS app available with even more features!')}
+                    </span>
+                    <span className="rounded bg-white/20 px-2 py-0.5 text-xs font-semibold">{t('New')}</span>
+                </a>
+
                 {/* Hero Section */}
                 <section className="text-center">
-                    <div className="mb-6 flex items-center justify-center gap-3">
-                        <Heading className="text-4xl font-bold tracking-tight sm:text-5xl">{t('Fadogen')}</Heading>
-                        <Badge color="red">{t('Alpha')}</Badge>
-                    </div>
+                    <Heading className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">{t('Fadogen')}</Heading>
                     <Text className="mx-auto mb-8 max-w-2xl text-lg text-zinc-600 dark:text-zinc-300">
                         {t('Initialize a development environment in seconds')}
                     </Text>
