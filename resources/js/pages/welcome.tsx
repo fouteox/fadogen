@@ -4,47 +4,19 @@ import { Heading, Subheading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
 import SimpleVideoPlayer from '@/components/video-player';
 import { Head, WhenVisible } from '@inertiajs/react';
-import { Apple, Heart, Rocket } from 'lucide-react';
+import { Heart, Rocket } from 'lucide-react';
 import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { index } from '@/routes/generator';
 
 const Welcome: React.FC = () => {
-    const { t, i18n } = useTranslation();
-
-    const getDocsUrl = () => {
-        const lang = i18n.language;
-        if (lang === 'fr') return 'https://docs.fadogen.app/fr';
-        if (lang === 'de') return 'https://docs.fadogen.app/de';
-        return 'https://docs.fadogen.app';
-    };
+    const { t } = useTranslation();
 
     return (
         <>
             <Head title={t('Welcome')} />
 
             <div className="mx-auto flex max-w-5xl flex-col">
-                {/* Native App Announcement */}
-                <a
-                    href={getDocsUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mb-8 flex flex-col items-center gap-2 rounded-lg bg-gradient-to-r from-zinc-800 to-zinc-900 px-4 py-3 text-white ring-1 ring-zinc-700 transition-all hover:from-zinc-700 hover:to-zinc-800 md:gap-3 md:py-4 lg:flex-row lg:justify-center dark:from-zinc-800 dark:to-zinc-900 dark:ring-zinc-600 dark:hover:from-zinc-700 dark:hover:to-zinc-800"
-                >
-                    <span className="flex items-center gap-2">
-                        <Apple className="size-5 md:size-6" />
-                        <span className="rounded bg-white/20 px-2 py-0.5 text-xs font-semibold lg:hidden">
-                            {t('New')}
-                        </span>
-                    </span>
-                    <span className="text-center text-sm font-medium md:text-base lg:text-left">
-                        {t('Native macOS app available with even more features!')}
-                    </span>
-                    <span className="hidden rounded bg-white/20 px-2 py-0.5 text-xs font-semibold lg:inline">
-                        {t('New')}
-                    </span>
-                </a>
-
                 {/* Hero Section */}
                 <section className="text-center">
                     <Heading className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">{t('Fadogen')}</Heading>
