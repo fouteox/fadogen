@@ -34,7 +34,7 @@ services:
     <<: *base
     build:
       target: app
-    command: ["php", "/var/www/html/artisan", "octane:start", "--server=frankenphp", "--port=8000"]
+    command: ["php", "/var/www/html/artisan", "octane:start", "--server=frankenphp", "--port=8080"]
     stop_signal: SIGTERM
     environment:
       AUTORUN_ENABLED: true
