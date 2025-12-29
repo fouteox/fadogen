@@ -19,8 +19,6 @@ Route::get('/deploy', function () {
     return Inertia\Inertia::render('deploy');
 })->name('deploy');
 
-Route::get('/stream-video', [App\Http\Controllers\VideoController::class, 'streamVideo'])->name('video.stream');
-
 Route::middleware(['throttle:60,1'])->group(function () {
     Route::get('/init/{template?}', [InitController::class, 'index'])
         ->name('init')
