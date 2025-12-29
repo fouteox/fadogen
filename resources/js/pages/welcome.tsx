@@ -2,8 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Heading, Subheading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
-import SimpleVideoPlayer from '@/components/video-player';
-import { Head, WhenVisible } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { Heart, Rocket } from 'lucide-react';
 import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -31,7 +30,8 @@ const Welcome: React.FC = () => {
                     </div>
                 </section>
 
-                {/* Video Demo Section */}
+                {/* Video Demo Section - Temporarily disabled for debugging */}
+                {/*
                 <section className="mb-16">
                     <div className="mx-auto mb-8 max-w-3xl text-center">
                         <Subheading className="mb-4 text-xl font-medium sm:text-2xl">{t('See how it works')}</Subheading>
@@ -51,6 +51,7 @@ const Welcome: React.FC = () => {
                         </WhenVisible>
                     </div>
                 </section>
+                */}
 
                 {/* Pricing Section */}
                 <section className="mb-16 rounded-lg bg-white p-8 ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10">
