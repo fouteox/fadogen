@@ -53,7 +53,7 @@ services:
 #      traefik.http.routers.fadogen.entrypoints: websecure
 #      traefik.http.routers.fadogen.tls: true
 #      traefik.http.routers.fadogen.tls.certresolver: letsencrypt-digitalocean
-      traefik.http.services.fadogen.loadbalancer.server.port: 8000
+      traefik.http.services.fadogen.loadbalancer.server.port: 8080
       # Health check
       traefik.http.services.fadogen.loadbalancer.healthcheck.path: "/up"
       traefik.http.services.fadogen.loadbalancer.healthcheck.interval: "30s"
