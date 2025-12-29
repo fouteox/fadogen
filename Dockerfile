@@ -59,10 +59,7 @@ RUN mkdir -p \
     storage/framework/sessions \
     storage/framework/views \
     bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
-    # Fix: Laravel Octane hardcodes "auto_https disable_redirects" which still triggers ACME \
-    # This causes 30s timeouts. Replace with "auto_https off" to fully disable ACME.
-    && sed -i 's/{\$CADDY_GLOBAL_OPTIONS}/auto_https off/' vendor/laravel/octane/src/Commands/stubs/Caddyfile
+    && chown -R www-data:www-data storage bootstrap/cache
 
 USER www-data
 
