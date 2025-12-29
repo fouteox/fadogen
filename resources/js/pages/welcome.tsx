@@ -2,8 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Heading, Subheading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
-import SimpleVideoPlayer from '@/components/video-player';
-import { Head, WhenVisible } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { Heart, Rocket } from 'lucide-react';
 import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -37,18 +36,14 @@ const Welcome: React.FC = () => {
                         <Subheading className="mb-4 text-xl font-medium sm:text-2xl">{t('See how it works')}</Subheading>
                         <Text className="mb-6">{t('Watch this quick demo to see how Fadogen simplifies your development workflow.')}</Text>
                     </div>
-                    <div className="overflow-hidden rounded-lg">
-                        <WhenVisible
-                            data="videoPlayer"
-                            buffer={200}
-                            fallback={
-                                <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                                    <p className="text-zinc-500 dark:text-zinc-400">{t('Loading video...')}</p>
-                                </div>
-                            }
+                    <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+                        <video
+                            className="h-full w-full rounded-lg"
+                            preload="metadata"
+                            controls
                         >
-                            <SimpleVideoPlayer />
-                        </WhenVisible>
+                            <source src="https://cdn.fadogen.app/demo_fadogen.mp4" type="video/mp4" />
+                        </video>
                     </div>
                 </section>
 
