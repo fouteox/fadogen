@@ -1,4 +1,7 @@
 **/.DS_Store
+**/*.log
+**/*.md
+.git
 .vault-password
 .ddev
 .github
@@ -6,10 +9,14 @@
 .idea
 .config
 .data
+tests
+docs
+node_modules
+vendor
 Dockerfile
 compose*.yaml
 
-# Environment files with secrets
+# Environment files with secrets (keep the templates only)
 .env
 .env.*
 !.env.example

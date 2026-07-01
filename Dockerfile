@@ -10,11 +10,10 @@ USER root
 RUN install-php-extensions bcmath
 
 ############################################
-# Builder Stage
+# Builder Stage (vendor only — JS assets are pre-built on the CI runner,
+# so the build needs no .env secret and never bakes one into the image)
 ############################################
 FROM base AS builder
-
-COPY --from=oven/bun:1.3-debian /usr/local/bin/bun /usr/local/bin/bun
 
 COPY --link composer.json composer.lock ./
 
@@ -26,19 +25,9 @@ RUN composer install \
     --no-scripts \
     --audit
 
-COPY --link package*.json bun.lock* ./
-
-RUN bun install --frozen-lockfile
-
 COPY --link . .
 
 RUN composer dump-autoload --classmap-authoritative --no-dev
-
-ARG ENV_HASH
-RUN --mount=type=secret,id=dotenv \
-    echo "Build with ENV_HASH=${ENV_HASH}" && \
-    set -a && . /run/secrets/dotenv && set +a && \
-    bun run build:ssr
 
 ############################################
 # App Image
@@ -47,9 +36,8 @@ FROM base AS app
 
 COPY --link --chown=33:33 --from=builder /var/www/html/vendor ./vendor
 
+# The build context already carries public/build (pre-built on the runner).
 COPY --link --chown=33:33 . .
-
-COPY --link --chown=33:33 --from=builder /var/www/html/public/build ./public/build
 
 RUN mkdir -p \
     storage/logs \
@@ -70,7 +58,8 @@ FROM oven/bun:1.3-debian AS ssr
 
 WORKDIR /app
 
-COPY --from=builder /var/www/html/bootstrap/ssr ./bootstrap/ssr
+# bootstrap/ssr is produced by `bun run build:ssr` on the runner.
+COPY --link bootstrap/ssr ./bootstrap/ssr
 
 EXPOSE 13714
 
