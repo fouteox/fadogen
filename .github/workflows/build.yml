@@ -57,12 +57,8 @@ jobs:
             dotenv=.env.production
           build-args: |
             ENV_HASH=${{ hashFiles('.env.production') }}
-          cache-from: |
-            type=gha,scope=app
-            type=gha,scope=shared
-          cache-to: |
-            type=gha,mode=max,scope=app
-            type=gha,mode=max,scope=shared
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-app
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-app,mode=max
 
       - name: Extract metadata for SSR image
         id: meta-ssr
@@ -87,9 +83,5 @@ jobs:
             dotenv=.env.production
           build-args: |
             ENV_HASH=${{ hashFiles('.env.production') }}
-          cache-from: |
-            type=gha,scope=ssr
-            type=gha,scope=shared
-          cache-to: |
-            type=gha,mode=max,scope=ssr
-            type=gha,mode=max,scope=shared
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr,mode=max
