@@ -1,0 +1,95 @@
+name: Build
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ${{ vars.SYSTEM_ARCH == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Create .env.production file
+        run: echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 -d > .env.production
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for App image
+        id: meta-app
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=short,suffix=-app
+            type=ref,event=branch,suffix=-app
+            type=raw,value=run-${{ github.run_number }}-app
+            latest
+
+      - name: Build and push App image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          target: app
+          tags: ${{ steps.meta-app.outputs.tags }}
+          labels: ${{ steps.meta-app.outputs.labels }}
+          secret-files: |
+            dotenv=.env.production
+          build-args: |
+            ENV_HASH=${{ hashFiles('.env.production') }}
+          cache-from: |
+            type=gha,scope=app
+            type=gha,scope=shared
+          cache-to: |
+            type=gha,mode=max,scope=app
+            type=gha,mode=max,scope=shared
+
+      - name: Extract metadata for SSR image
+        id: meta-ssr
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=short,suffix=-ssr
+            type=ref,event=branch,suffix=-ssr
+            type=raw,value=run-${{ github.run_number }}-ssr
+            ssr
+
+      - name: Build and push SSR image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          target: ssr
+          tags: ${{ steps.meta-ssr.outputs.tags }}
+          labels: ${{ steps.meta-ssr.outputs.labels }}
+          secret-files: |
+            dotenv=.env.production
+          build-args: |
+            ENV_HASH=${{ hashFiles('.env.production') }}
+          cache-from: |
+            type=gha,scope=ssr
+            type=gha,scope=shared
+          cache-to: |
+            type=gha,mode=max,scope=ssr
+            type=gha,mode=max,scope=shared
