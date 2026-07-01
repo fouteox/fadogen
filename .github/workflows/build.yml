@@ -79,8 +79,8 @@ jobs:
           target: app
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
-          cache-from: type=gha,scope=app
-          cache-to: type=gha,mode=max,scope=app
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-app
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-app,mode=max
 
       - name: Extract metadata for SSR image
         id: meta-ssr
@@ -101,8 +101,8 @@ jobs:
           target: ssr
           tags: ${{ steps.meta-ssr.outputs.tags }}
           labels: ${{ steps.meta-ssr.outputs.labels }}
-          cache-from: type=gha,scope=ssr
-          cache-to: type=gha,mode=max,scope=ssr
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr,mode=max
 
       - name: Cleanup pre-build env
         if: always()
