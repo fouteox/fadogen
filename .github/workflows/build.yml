@@ -77,7 +77,7 @@ jobs:
             latest
 
       - name: Build and push App image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -105,7 +105,7 @@ jobs:
             ssr
 
       - name: Build and push SSR image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
