@@ -1,0 +1,21 @@
+# Dependabot: version updates for the CI supply chain only (Dockerfile FROMs
+# and GitHub Actions). Composer/npm version noise is deliberately excluded —
+# security-driven PRs for those come from Dependabot security updates,
+# enabled at the repository level.
+#
+# Note: the serversideup/php FROM is ARG-parameterized (PHP_VERSION), which
+# Dependabot cannot follow — PHP version bumps stay deliberate. Base image
+# FRESHNESS for the same tag is covered by the weekly scheduled rebuild in
+# build.yml (no-cache + pull).
+version: 2
+updates:
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

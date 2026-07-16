@@ -5,6 +5,11 @@ on:
     types: [closed]
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Weekly security rebuild (Mondays 04:00 UTC): base images ship security
+    # fixes under the SAME tag — they only reach us on a fresh build. The
+    # run produces new run-N tags, so Flux Image Automation rolls it out.
+    - cron: '0 4 * * 1'
 
 env:
   REGISTRY: ghcr.io
@@ -12,7 +17,7 @@ env:
 
 jobs:
   build:
-    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ${{ vars.SYSTEM_ARCH == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     permissions:
       contents: read
@@ -79,6 +84,12 @@ jobs:
           target: app
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
+          # Scheduled runs bypass the layer cache and re-pull bases: a cached
+          # rebuild would reuse the old (potentially vulnerable) layers and
+          # defeat the purpose. cache-to still refreshes the cache for the
+          # week's push builds.
+          no-cache: ${{ github.event_name == 'schedule' }}
+          pull: ${{ github.event_name == 'schedule' }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-app
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-app,mode=max
 
@@ -101,6 +112,8 @@ jobs:
           target: ssr
           tags: ${{ steps.meta-ssr.outputs.tags }}
           labels: ${{ steps.meta-ssr.outputs.labels }}
+          no-cache: ${{ github.event_name == 'schedule' }}
+          pull: ${{ github.event_name == 'schedule' }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr,mode=max
 
