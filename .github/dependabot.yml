@@ -3,10 +3,11 @@
 # security-driven PRs for those come from Dependabot security updates,
 # enabled at the repository level.
 #
-# Note: the serversideup/php FROM is ARG-parameterized (PHP_VERSION), which
-# Dependabot cannot follow — PHP version bumps stay deliberate. Base image
-# FRESHNESS for the same tag is covered by the weekly scheduled rebuild in
-# build.yml (no-cache + pull).
+# Note: both FROMs are digest-pinned — Dependabot keeps tag and digest in
+# sync, so every upstream rebuild of the base lands as a reviewable PR.
+# PHP version bumps stay deliberate (Dockerfile + setup-php + composer.json
+# move together). The weekly scheduled rebuild in build.yml still refreshes
+# what RUN layers fetch at build time (install-php-extensions, composer).
 version: 2
 updates:
   - package-ecosystem: docker

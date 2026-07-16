@@ -1,9 +1,11 @@
-ARG PHP_VERSION=8.5
-
 ############################################
 # Base Stage
 ############################################
-FROM serversideup/php:${PHP_VERSION}-frankenphp AS base
+# Digest-pinned (supply-chain): builds are reproducible and every upstream
+# rebuild of the tag lands as a reviewable Dependabot PR (tag + digest kept
+# in sync). PHP version bumps stay deliberate: Dockerfile + setup-php in
+# build.yml + composer.json must move together.
+FROM serversideup/php:8.5-frankenphp@sha256:a0f4447da7612f9bca3c982d0cf33a607cbddf828f4b96a44bfa9f6f037007b6 AS base
 
 USER root
 
@@ -54,7 +56,7 @@ USER www-data
 ############################################
 # SSR Image
 ############################################
-FROM oven/bun:1.3-debian AS ssr
+FROM oven/bun:1.3-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f AS ssr
 
 WORKDIR /app
 
