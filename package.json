@@ -11,7 +11,7 @@
     "type": "module",
     "devDependencies": {
         "@headlessui/react": "^2.2.9",
-        "@inertiajs/react": "^2.3.4",
+        "@inertiajs/react": "^3.0.0",
         "@laravel/vite-plugin-wayfinder": "^0.1.7",
         "@prettier/plugin-oxc": "^0.0.4",
         "@tailwindcss/vite": "^4.1.18",
