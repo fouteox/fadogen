@@ -15,7 +15,7 @@
         "@laravel/vite-plugin-wayfinder": "^0.1.7",
         "@prettier/plugin-oxc": "^0.0.4",
         "@tailwindcss/vite": "^4.1.18",
-        "@types/node": "^22.19.3",
+        "@types/node": "^26.0.0",
         "@types/react": "^19.2.7",
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-react": "^4.7.0",
