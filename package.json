@@ -21,7 +21,7 @@
         "@vitejs/plugin-react": "^4.7.0",
         "axios": "^1.13.2",
         "clsx": "^2.1.1",
-        "i18next": "^25.7.3",
+        "i18next": "^26.0.0",
         "i18next-browser-languagedetector": "^8.2.0",
         "i18next-http-backend": "^3.0.2",
         "laravel-echo": "^1.19.0",
