@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require 'vendor/autoload.php';
 
+use App\Enums\PhpVersionEnum;
+
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
@@ -13,7 +15,7 @@ final class Laravel
 {
     private array $answers = [
         'project_name' => 'laravel',
-        'php_version' => '8.4',
+        'php_version' => '8.5',
         'database' => 'sqlite',
         'starter_kit' => 'none',
         'livewire_volt' => false,
@@ -96,13 +98,15 @@ final class Laravel
             $isValidProjectName = true;
         }
 
+        $phpVersionOptions = [];
+
+        foreach (array_reverse(PhpVersionEnum::cases()) as $index => $phpVersion) {
+            $phpVersionOptions[$phpVersion->value] = 'PHP '.$phpVersion->value.($index === 0 ? ' ('.__('Recommended').')' : '');
+        }
+
         $this->answers['php_version'] = select(
             label: __('laravel.php_version'),
-            options: [
-                '8.4' => 'PHP 8.4 ('.__('Recommended').')',
-                '8.3' => 'PHP 8.3',
-                '8.2' => 'PHP 8.2',
-            ]
+            options: $phpVersionOptions,
         );
     }
 
