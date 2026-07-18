@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\PhpVersionEnum;
 use App\Enums\TemplateStatusEnum;
 use App\Models\Template;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,7 +24,7 @@ final class TemplateFactory extends Factory
                 'server_contact' => $this->faker->email(),
                 'needs_traefik' => $this->faker->boolean(),
                 'network' => $this->faker->optional()->word(),
-                'php_version' => $this->faker->randomElement(['8.2', '8.3', '8.4']),
+                'php_version' => $this->faker->randomElement(array_column(PhpVersionEnum::cases(), 'value')),
                 'php_extensions' => $this->faker->randomElements(['pdo', 'mysql', 'redis', 'gd'], 2),
                 'database' => $this->faker->randomElement(['mariadb', 'mysql', 'postgresql']),
                 'starter_kit' => 'none',

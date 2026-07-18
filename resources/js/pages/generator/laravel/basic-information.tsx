@@ -1,28 +1,13 @@
-import {
-    ErrorMessage,
-    Field,
-    FieldGroup,
-    InfoMessage,
-    Label,
-} from '@/components/ui/fieldset';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { ErrorMessage, Field, FieldGroup, InfoMessage, Label } from '@/components/ui/fieldset';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Switch, SwitchField } from '@/components/ui/switch';
-import {
-    BaseFormSectionProps,
-    DatabaseType,
-    PhpVersion,
-    SelectChangeEvent,
-} from '@/types';
-import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { BaseFormSectionProps, DatabaseType, PhpVersion, SelectChangeEvent } from '@/types';
 
-const useBasicInformationHandlers = (
-    setData: BaseFormSectionProps['setData'],
-) => {
-    const handleProjectNameChange = (
-        e: React.ChangeEvent<HTMLInputElement>,
-    ) => {
+const useBasicInformationHandlers = (setData: BaseFormSectionProps['setData']) => {
+    const handleProjectNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setData('project_name', e.target.value);
     };
 
@@ -46,12 +31,7 @@ const useBasicInformationHandlers = (
     };
 };
 
-export const BasicInformation = ({
-    data,
-    setData,
-    errors,
-    modifiedFields = [],
-}: BaseFormSectionProps) => {
+export const BasicInformation = ({ data, setData, errors, validate, modifiedFields = [] }: BaseFormSectionProps) => {
     const { t } = useTranslation();
     const handlers = useBasicInformationHandlers(setData);
 
@@ -68,17 +48,11 @@ export const BasicInformation = ({
                     value={data.project_name}
                     placeholder={'my-awesome-project'}
                     onChange={handlers.handleProjectNameChange}
-                    onBlur={() => {
-                        if (typeof setData.validate === 'function') {
-                            setData.validate('project_name');
-                        }
-                    }}
+                    onBlur={() => validate?.('project_name')}
                     required
                     invalid={!!errors.project_name}
                 />
-                {errors.project_name && (
-                    <ErrorMessage>{errors.project_name}</ErrorMessage>
-                )}
+                {errors.project_name && <ErrorMessage>{errors.project_name}</ErrorMessage>}
             </Field>
 
             <Field>
@@ -87,11 +61,7 @@ export const BasicInformation = ({
                     name="php_version"
                     value={data.php_version}
                     onChange={handlers.handlePhpVersionChange}
-                    onBlur={() => {
-                        if (typeof setData.validate === 'function') {
-                            setData.validate('php_version');
-                        }
-                    }}
+                    onBlur={() => validate?.('php_version')}
                     required
                     invalid={!!errors.php_version}
                     isAutoDetected={isFieldAutoDetected('php_version')}
@@ -100,12 +70,8 @@ export const BasicInformation = ({
                     <option value="8.4">8.4</option>
                     <option value="8.3">8.3</option>
                 </Select>
-                {isFieldAutoDetected('php_version') && (
-                    <InfoMessage>{t('Auto-detected value')}</InfoMessage>
-                )}
-                {errors.php_version && (
-                    <ErrorMessage>{errors.php_version}</ErrorMessage>
-                )}
+                {isFieldAutoDetected('php_version') && <InfoMessage>{t('Auto-detected value')}</InfoMessage>}
+                {errors.php_version && <ErrorMessage>{errors.php_version}</ErrorMessage>}
             </Field>
 
             <Field>
@@ -114,11 +80,7 @@ export const BasicInformation = ({
                     name="database"
                     value={data.database}
                     onChange={handlers.handleDatabaseChange}
-                    onBlur={() => {
-                        if (typeof setData.validate === 'function') {
-                            setData.validate('database');
-                        }
-                    }}
+                    onBlur={() => validate?.('database')}
                     required
                     invalid={!!errors.database}
                     isAutoDetected={isFieldAutoDetected('database')}
@@ -128,20 +90,12 @@ export const BasicInformation = ({
                     <option value="mariadb">MariaDB</option>
                     <option value="pgsql">PostgreSQL</option>
                 </Select>
-                {isFieldAutoDetected('database') && (
-                    <InfoMessage>{t('Auto-detected value')}</InfoMessage>
-                )}
-                {errors.database && (
-                    <ErrorMessage>{errors.database}</ErrorMessage>
-                )}
+                {isFieldAutoDetected('database') && <InfoMessage>{t('Auto-detected value')}</InfoMessage>}
+                {errors.database && <ErrorMessage>{errors.database}</ErrorMessage>}
             </Field>
 
             <SwitchField>
-                <Switch
-                    name="initialize_git"
-                    checked={data.initialize_git}
-                    onChange={handlers.handleGitInitChange}
-                />
+                <Switch name="initialize_git" checked={data.initialize_git} onChange={handlers.handleGitInitChange} />
                 <Label>{t('laravel.initialize_git')}</Label>
             </SwitchField>
         </FieldGroup>

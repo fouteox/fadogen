@@ -1,13 +1,7 @@
-import {
-    Dropdown,
-    DropdownButton,
-    DropdownItem,
-    DropdownLabel,
-    DropdownMenu,
-} from '@/components/ui/dropdown';
-import { NavbarItem } from '@/components/ui/navbar';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Dropdown, DropdownButton, DropdownItem, DropdownLabel, DropdownMenu } from '@/components/ui/dropdown';
+import { NavbarItem } from '@/components/ui/navbar';
 
 const LANGUAGES = [
     { code: 'fr', name: 'Français', flag: 'fr' },
@@ -20,9 +14,7 @@ type Language = (typeof LANGUAGES)[number];
 
 const LanguageSwitcher = () => {
     const { i18n } = useTranslation();
-    const [currentLang, setCurrentLang] = useState<Language>(
-        LANGUAGES.find((lang) => lang.code === i18n.language) ?? LANGUAGES[0],
-    );
+    const [currentLang, setCurrentLang] = useState<Language>(LANGUAGES.find((lang) => lang.code === i18n.language) ?? LANGUAGES[0]);
 
     const handleLanguageChange = (language: Language) => {
         void i18n.changeLanguage(language.code);
@@ -40,16 +32,8 @@ const LanguageSwitcher = () => {
             </DropdownButton>
             <DropdownMenu anchor="bottom">
                 {LANGUAGES.map((language) => (
-                    <DropdownItem
-                        key={language.code}
-                        onClick={() => handleLanguageChange(language)}
-                    >
-                        <span
-                            data-slot="icon"
-                            className={`fib fi-${language.flag} rounded-sm`}
-                            role="img"
-                            aria-label={`Drapeau ${language.name}`}
-                        />
+                    <DropdownItem key={language.code} onClick={() => handleLanguageChange(language)}>
+                        <span data-slot="icon" className={`fib fi-${language.flag} rounded-sm`} role="img" aria-label={`Drapeau ${language.name}`} />
                         <DropdownLabel>{language.name}</DropdownLabel>
                     </DropdownItem>
                 ))}

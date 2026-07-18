@@ -32,11 +32,8 @@ final class DependenciesDetectionController extends Controller
         }
 
         try {
-            $packageData = $this->analyseCustomPackage($customPackage, $detectedDependencies);
-
-            if ($packageData) {
-                $this->analyseRepositoryFiles($customPackage, $detectedDependencies);
-            }
+            $this->analyseCustomPackage($customPackage, $detectedDependencies);
+            $this->analyseRepositoryFiles($customPackage, $detectedDependencies);
         } catch (Exception $e) {
             Log::error("Error analyzing package $customPackage: ".$e->getMessage());
         }
@@ -144,7 +141,7 @@ final class DependenciesDetectionController extends Controller
      * @throws ConnectionException
      * @throws Exception
      */
-    private function analyseCustomPackage(string $package, array &$detectedDependencies): ?array
+    private function analyseCustomPackage(string $package, array &$detectedDependencies): void
     {
         [$vendor, $repo] = explode('/', $package, 2);
 
@@ -178,8 +175,6 @@ final class DependenciesDetectionController extends Controller
         }
 
         $this->detectLimitedDependencies($allDependencies, $detectedDependencies);
-
-        return $composerData;
     }
 
     private function detectLimitedDependencies(array $dependencies, array &$detectedDependencies): void
@@ -214,32 +209,20 @@ final class DependenciesDetectionController extends Controller
     private function extractPhpVersion(string $constraint): ?string
     {
         $versions = explode('|', $constraint);
-        $highestVersion = null;
+        $highestSupportedVersion = null;
 
         foreach ($versions as $versionConstraint) {
             $versionConstraint = mb_trim($versionConstraint);
 
             if (preg_match('/(\d+\.\d+)/', $versionConstraint, $matches)) {
-                $version = $matches[1];
+                $phpVersion = PhpVersionEnum::tryFrom($matches[1]);
 
-                if ($highestVersion === null || version_compare($version, $highestVersion, '>')) {
-                    $highestVersion = $version;
+                if ($phpVersion !== null && ($highestSupportedVersion === null || version_compare($phpVersion->value, $highestSupportedVersion->value, '>'))) {
+                    $highestSupportedVersion = $phpVersion;
                 }
             }
         }
 
-        if ($highestVersion !== null) {
-            if (version_compare($highestVersion, '8.4', '>=')) {
-                return PhpVersionEnum::Php84->value;
-            }
-            if (version_compare($highestVersion, '8.3', '>=')) {
-                return PhpVersionEnum::Php83->value;
-            }
-            if (version_compare($highestVersion, '8.2', '>=')) {
-                return PhpVersionEnum::Php82->value;
-            }
-        }
-
-        return null;
+        return $highestSupportedVersion?->value;
     }
 }

@@ -1,30 +1,28 @@
+import { useForm } from '@inertiajs/react';
+import axios, { AxiosResponse } from 'axios';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { detect } from '@/actions/App/Http/Controllers/DependenciesDetectionController';
+import { store } from '@/routes/generator';
 import {
     DatabaseType,
     DetectedDependencies,
     FormValues,
     PackageManager,
     PhpVersion,
-    PrecognitionFormData,
     QueueDriverValue,
     QueueTypeValue,
     Stack,
     TestingFramework,
 } from '@/types';
-import axios, { AxiosResponse } from 'axios';
-import { useForm } from 'laravel-precognition-react-inertia';
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
-import { store } from '@/routes/generator';
-import { detect } from '@/actions/App/Http/Controllers/DependenciesDetectionController';
 
 export const useLaravelForm = () => {
     const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
     const [modifiedFields, setModifiedFields] = useState<string[]>([]);
 
-    // TODO : remove precognition
-    const form = useForm('post', store().url, {
+    const form = useForm<FormValues>(store(), {
         project_name: '',
         php_version: '8.5' as PhpVersion,
         database: 'sqlite' as DatabaseType,
@@ -97,7 +95,7 @@ export const useLaravelForm = () => {
     const handleSubmit = (e: React.FormEvent): void => {
         e.preventDefault();
 
-        form.transform((data: PrecognitionFormData) => {
+        form.transform((data) => {
             const transformedData = { ...data };
 
             if (transformedData.starter_kit !== 'custom') {

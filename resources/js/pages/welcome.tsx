@@ -1,11 +1,11 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Heading, Subheading } from '@/components/ui/heading';
-import { Text } from '@/components/ui/text';
 import { Head } from '@inertiajs/react';
 import { Heart, Rocket } from 'lucide-react';
 import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Heading, Subheading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
 import { index } from '@/routes/generator';
 
 const Welcome: React.FC = () => {
@@ -37,11 +37,7 @@ const Welcome: React.FC = () => {
                         <Text className="mb-6">{t('Watch this quick demo to see how Fadogen simplifies your development workflow.')}</Text>
                     </div>
                     <div className="relative aspect-video w-full overflow-hidden rounded-lg">
-                        <video
-                            className="h-full w-full rounded-lg"
-                            preload="metadata"
-                            controls
-                        >
+                        <video className="h-full w-full rounded-lg" preload="metadata" controls>
                             <source src="https://cdn.fadogen.app/demo_fadogen.mp4" type="video/mp4" />
                         </video>
                     </div>

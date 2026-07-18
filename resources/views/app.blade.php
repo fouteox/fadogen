@@ -13,16 +13,17 @@
             })();
         </script>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <x-inertia::head>
+            <title>{{ config('app.name', 'Laravel') }}</title>
+        </x-inertia::head>
 
         <link rel="preconnect" href="https://rsms.me">
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
 
         @viteReactRefresh
-        @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
-        @inertiaHead
+        @vite('resources/js/app.tsx')
     </head>
     <body>
-        @inertia
+        <x-inertia::app />
     </body>
 </html>

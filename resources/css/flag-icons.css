@@ -1,31 +1,32 @@
-.fib, .fi {
-  background-size: contain;
-  background-position: 50%;
-  background-repeat: no-repeat;
+.fib,
+.fi {
+    background-size: contain;
+    background-position: 50%;
+    background-repeat: no-repeat;
 }
 
 .fi {
-  position: relative;
-  display: inline-block;
-  width: 1.333333em;
-  line-height: 1em;
+    position: relative;
+    display: inline-block;
+    width: 1.333333em;
+    line-height: 1em;
 }
 .fi:before {
-  content: " ";
+    content: ' ';
 }
 
 .fi-de {
-  background-image: url(assets/flags/de.svg);
+    background-image: url(assets/flags/de.svg);
 }
 
 .fi-es {
-  background-image: url(assets/flags/es.svg);
+    background-image: url(assets/flags/es.svg);
 }
 
 .fi-fr {
-  background-image: url(assets/flags/fr.svg);
+    background-image: url(assets/flags/fr.svg);
 }
 
 .fi-gb {
-  background-image: url(assets/flags/gb.svg);
+    background-image: url(assets/flags/gb.svg);
 }

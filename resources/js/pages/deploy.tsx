@@ -1,11 +1,11 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Heading, Subheading } from '@/components/ui/heading';
-import { Text } from '@/components/ui/text';
 import { Head } from '@inertiajs/react';
 import { CheckCircle2, CloudCog, Code, Globe, Monitor, Network, Server, Shield, Terminal } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Heading, Subheading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
 import { index } from '@/routes/generator';
 
 interface DeploymentStepProps {

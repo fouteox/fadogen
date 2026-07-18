@@ -1,4 +1,4 @@
-import i18n from 'i18next';
+import i18n, { type Resource } from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import HttpBackend from 'i18next-http-backend';
 import { initReactI18next } from 'react-i18next';
@@ -33,7 +33,7 @@ const createI18nInstance = () => {
     return instance;
 };
 
-export const initI18n = (locale: string = 'en', resources = {}) => {
+export const initI18n = (locale: string = 'en', resources: Resource = {}) => {
     i18nInstance = createI18nInstance();
 
     void i18nInstance.init({
