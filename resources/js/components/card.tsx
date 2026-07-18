@@ -1,7 +1,7 @@
-import { Link } from '@/components/ui/link';
-import { Text } from '@/components/ui/text';
 import clsx from 'clsx';
 import type React from 'react';
+import { Link } from '@/components/ui/link';
+import { Text } from '@/components/ui/text';
 
 const sizes = {
     xs: 'sm:max-w-xs',
@@ -23,21 +23,9 @@ type CardBaseProps = {
 };
 
 type CardProps = CardBaseProps &
-    (
-        | Omit<React.ComponentPropsWithoutRef<'div'>, 'href'>
-        | Omit<
-              React.ComponentPropsWithoutRef<typeof Link>,
-              'href' | 'className'
-          >
-    );
+    (Omit<React.ComponentPropsWithoutRef<'div'>, 'href'> | Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href' | 'className'>);
 
-export function Card({
-    size = 'md',
-    className,
-    children,
-    href,
-    ...props
-}: CardProps) {
+export function Card({ size = 'md', className, children, href, ...props }: CardProps) {
     const classes = clsx(
         className,
         sizes[size],
@@ -46,79 +34,37 @@ export function Card({
 
     if (href) {
         return (
-            <Link
-                href={href}
-                {...(props as Omit<
-                    React.ComponentPropsWithoutRef<typeof Link>,
-                    'href' | 'className'
-                >)}
-                className={classes}
-            >
+            <Link href={href} {...(props as Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href' | 'className'>)} className={classes}>
                 {children}
             </Link>
         );
     }
 
     return (
-        <div
-            {...(props as React.ComponentPropsWithoutRef<'div'>)}
-            className={classes}
-        >
+        <div {...(props as React.ComponentPropsWithoutRef<'div'>)} className={classes}>
             {children}
         </div>
     );
 }
 
-export function CardHeader({
-    className,
-    ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+export function CardHeader({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
     return <div {...props} className={clsx(className)} />;
 }
 
-export function CardTitle({
-    className,
-    ...props
-}: React.ComponentPropsWithoutRef<'h3'>) {
-    return (
-        <h3
-            {...props}
-            className={clsx(
-                className,
-                'text-lg/6 font-semibold text-balance text-zinc-950 sm:text-base/6 dark:text-white',
-            )}
-        />
-    );
+export function CardTitle({ className, ...props }: React.ComponentPropsWithoutRef<'h3'>) {
+    return <h3 {...props} className={clsx(className, 'text-lg/6 font-semibold text-balance text-zinc-950 sm:text-base/6 dark:text-white')} />;
 }
 
-export function CardDescription({
-    className,
-    ...props
-}: { className?: string } & Omit<
-    React.ComponentPropsWithoutRef<typeof Text>,
-    'className'
->) {
+export function CardDescription({ className, ...props }: { className?: string } & Omit<React.ComponentPropsWithoutRef<typeof Text>, 'className'>) {
     return <Text {...props} className={clsx(className, 'mt-2 text-pretty')} />;
 }
 
-export function CardBody({
-    className,
-    ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+export function CardBody({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
     return <div {...props} className={clsx(className, 'mt-6')} />;
 }
 
-export function CardFooter({
-    className,
-    ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+export function CardFooter({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
     return (
-        <div
-            {...props}
-            className={clsx(
-                className,
-                'mt-6 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:flex-row sm:*:w-auto',
-            )}
-        />
+        <div {...props} className={clsx(className, 'mt-6 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:flex-row sm:*:w-auto')} />
     );
 }

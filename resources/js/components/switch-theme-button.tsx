@@ -1,30 +1,16 @@
-import { NavbarItem } from '@/components/ui/navbar';
 import { MoonIcon, SunIcon } from 'lucide-react';
-import { useState } from 'react';
+import { NavbarItem } from '@/components/ui/navbar';
 
 const SwitchThemeButton = () => {
-    const [theme, setTheme] = useState<'light' | 'dark'>(
-        document.documentElement.classList.contains('dark') ? 'dark' : 'light',
-    );
-
     const toggleTheme = () => {
-        const newTheme = theme === 'dark' ? 'light' : 'dark';
-        if (newTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-        localStorage.setItem('theme', newTheme);
-        setTheme(newTheme);
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
     };
 
     return (
-        <NavbarItem type={'button'} onClick={toggleTheme}>
-            {theme === 'dark' ? (
-                <SunIcon className="h-[24px] w-[24px] md:h-[20px] md:w-[20px]" />
-            ) : (
-                <MoonIcon className="h-[24px] w-[24px] md:h-[20px] md:w-[20px]" />
-            )}
+        <NavbarItem type="button" aria-label="Toggle theme" onClick={toggleTheme}>
+            <SunIcon className="hidden h-[24px] w-[24px] md:h-[20px] md:w-[20px] dark:block" />
+            <MoonIcon className="h-[24px] w-[24px] md:h-[20px] md:w-[20px] dark:hidden" />
         </NavbarItem>
     );
 };

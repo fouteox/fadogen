@@ -1,34 +1,20 @@
-import {
-    Description,
-    ErrorMessage,
-    Field,
-    FieldGroup,
-    Fieldset,
-    FieldsetInfoMessage,
-    InfoMessage,
-    Label,
-    Legend,
-} from '@/components/ui/fieldset';
+import { AnimatePresence, motion } from 'motion/react';
+import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Description, ErrorMessage, Field, FieldGroup, Fieldset, FieldsetInfoMessage, InfoMessage, Label, Legend } from '@/components/ui/fieldset';
 import { Input } from '@/components/ui/input';
 import { Radio, RadioField, RadioGroup } from '@/components/ui/radio';
 import { Select } from '@/components/ui/select';
 import { Switch, SwitchField } from '@/components/ui/switch';
 import { fadeInAnimation } from '@/constants/animations';
-import {
-    LaravelFormHook,
-    PackageManager,
-    SetDataMethod,
-    TestingFramework,
-} from '@/types';
-import { AnimatePresence, motion } from 'motion/react';
-import React, { useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { LaravelFormHook, PackageManager, SetDataMethod, TestingFramework } from '@/types';
 
 interface StarterKitConfigurationProps {
     data: LaravelFormHook['data'];
     setData: SetDataMethod;
     errors: LaravelFormHook['errors'];
     validating?: LaravelFormHook['validating'];
+    validate: LaravelFormHook['validate'];
     modifiedFields?: string[];
     handleStackChange: LaravelFormHook['handleStackChange'];
     detectDependencies?: LaravelFormHook['detectDependencies'];
@@ -38,15 +24,14 @@ export const StarterKitConfiguration = ({
     data,
     setData,
     errors,
+    validate,
     modifiedFields = [],
     handleStackChange,
     detectDependencies,
 }: StarterKitConfigurationProps) => {
     const { t } = useTranslation();
     const [isPackageLoading, setIsPackageLoading] = useState(false);
-    const lastCheckedPackageRef = useRef<string | undefined>(
-        data.custom_starter_kit,
-    );
+    const lastCheckedPackageRef = useRef<string | undefined>(data.custom_starter_kit);
 
     const handleTestingFrameworkChange = (value: string) => {
         setData('testing_framework', value as TestingFramework);
@@ -64,26 +49,17 @@ export const StarterKitConfiguration = ({
         }
     };
 
-    const handleCustomPackageChange = (
-        e: React.ChangeEvent<HTMLInputElement>,
-    ) => {
+    const handleCustomPackageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const packageName = e.target.value;
         setData('custom_starter_kit', packageName);
     };
 
     const handlePackageBlur = async () => {
-        // Validation à la perte de focus
-        if (typeof setData.validate === 'function') {
-            setData.validate('custom_starter_kit');
-        }
+        validate('custom_starter_kit');
 
         // Vérifier si la valeur a changé depuis la dernière vérification
         const currentPackage = data.custom_starter_kit;
-        if (
-            currentPackage === lastCheckedPackageRef.current ||
-            !currentPackage ||
-            currentPackage.trim() === ''
-        ) {
+        if (currentPackage === lastCheckedPackageRef.current || !currentPackage || currentPackage.trim() === '') {
             return; // Ne rien faire si la valeur n'a pas changé ou est vide
         }
 
@@ -116,25 +92,17 @@ export const StarterKitConfiguration = ({
                     name="starter_kit"
                     value={data.starter_kit}
                     onChange={handleStackChange}
-                    onBlur={() => {
-                        if (typeof setData.validate === 'function') {
-                            setData.validate('starter_kit');
-                        }
-                    }}
+                    onBlur={() => validate('starter_kit')}
                     required
                     invalid={!!errors.starter_kit}
                 >
-                    <option value="none">
-                        {t('laravel.starter_kit_none')}
-                    </option>
+                    <option value="none">{t('laravel.starter_kit_none')}</option>
                     <option value="react">React</option>
                     <option value="vue">Vue</option>
                     <option value="livewire">Livewire</option>
                     <option value="custom">Custom</option>
                 </Select>
-                {errors.starter_kit && (
-                    <ErrorMessage>{errors.starter_kit}</ErrorMessage>
-                )}
+                {errors.starter_kit && <ErrorMessage>{errors.starter_kit}</ErrorMessage>}
             </Field>
 
             <AnimatePresence mode="wait">
@@ -157,46 +125,30 @@ export const StarterKitConfiguration = ({
                                 required
                                 invalid={!!errors.custom_starter_kit}
                             />
-                            {errors.custom_starter_kit && (
-                                <ErrorMessage>
-                                    {errors.custom_starter_kit}
-                                </ErrorMessage>
-                            )}
+                            {errors.custom_starter_kit && <ErrorMessage>{errors.custom_starter_kit}</ErrorMessage>}
                         </Field>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             <AnimatePresence mode="wait">
-                {data.starter_kit !== 'none' &&
-                    data.starter_kit !== 'custom' && (
-                        <motion.div {...fadeInAnimation}>
-                            <Fieldset>
-                                <Legend>
-                                    {t('laravel.authentication_provider')}
-                                </Legend>
-                                <RadioGroup
-                                    value={
-                                        data.workos === true
-                                            ? 'workos'
-                                            : 'laravel'
-                                    }
-                                    onChange={handleAuthChange}
-                                >
-                                    <RadioField>
-                                        <Radio value="laravel" />
-                                        <Label>
-                                            {t('laravel.laravel_auth')}
-                                        </Label>
-                                    </RadioField>
-                                    <RadioField>
-                                        <Radio value="workos" />
-                                        <Label>{t('laravel.workos')}</Label>
-                                    </RadioField>
-                                </RadioGroup>
-                            </Fieldset>
-                        </motion.div>
-                    )}
+                {data.starter_kit !== 'none' && data.starter_kit !== 'custom' && (
+                    <motion.div {...fadeInAnimation}>
+                        <Fieldset>
+                            <Legend>{t('laravel.authentication_provider')}</Legend>
+                            <RadioGroup value={data.workos === true ? 'workos' : 'laravel'} onChange={handleAuthChange}>
+                                <RadioField>
+                                    <Radio value="laravel" />
+                                    <Label>{t('laravel.laravel_auth')}</Label>
+                                </RadioField>
+                                <RadioField>
+                                    <Radio value="workos" />
+                                    <Label>{t('laravel.workos')}</Label>
+                                </RadioField>
+                            </RadioGroup>
+                        </Fieldset>
+                    </motion.div>
+                )}
             </AnimatePresence>
 
             <AnimatePresence mode="wait">
@@ -206,13 +158,9 @@ export const StarterKitConfiguration = ({
                             <Switch
                                 name="livewire_volt"
                                 checked={data.livewire_volt}
-                                onChange={(checked: boolean) =>
-                                    setData('livewire_volt', checked)
-                                }
+                                onChange={(checked: boolean) => setData('livewire_volt', checked)}
                             />
-                            <Label>
-                                {t('Would you like to use Laravel Volt?')}
-                            </Label>
+                            <Label>{t('Would you like to use Laravel Volt?')}</Label>
                         </SwitchField>
                     </motion.div>
                 )}
@@ -220,34 +168,17 @@ export const StarterKitConfiguration = ({
 
             <Fieldset>
                 <Legend>{t('laravel.testing_framework')}</Legend>
-                <RadioGroup
-                    value={data.testing_framework}
-                    onChange={handleTestingFrameworkChange}
-                >
+                <RadioGroup value={data.testing_framework} onChange={handleTestingFrameworkChange}>
                     <RadioField>
-                        <Radio
-                            value="pest"
-                            isAutoDetected={isFieldAutoDetected(
-                                'testing_framework',
-                            )}
-                        />
+                        <Radio value="pest" isAutoDetected={isFieldAutoDetected('testing_framework')} />
                         <Label>Pest</Label>
                     </RadioField>
                     <RadioField>
-                        <Radio
-                            value="phpunit"
-                            isAutoDetected={isFieldAutoDetected(
-                                'testing_framework',
-                            )}
-                        />
+                        <Radio value="phpunit" isAutoDetected={isFieldAutoDetected('testing_framework')} />
                         <Label>PHPUnit</Label>
                     </RadioField>
                 </RadioGroup>
-                {isFieldAutoDetected('testing_framework') && (
-                    <FieldsetInfoMessage>
-                        {t('Auto-detected value')}
-                    </FieldsetInfoMessage>
-                )}
+                {isFieldAutoDetected('testing_framework') && <FieldsetInfoMessage>{t('Auto-detected value')}</FieldsetInfoMessage>}
             </Fieldset>
 
             <Field>
@@ -255,27 +186,14 @@ export const StarterKitConfiguration = ({
                 <Select
                     name="javascript_package_manager"
                     value={data.javascript_package_manager}
-                    onChange={(e) =>
-                        setData(
-                            'javascript_package_manager',
-                            e.target.value as PackageManager,
-                        )
-                    }
-                    isAutoDetected={isFieldAutoDetected(
-                        'javascript_package_manager',
-                    )}
+                    onChange={(e) => setData('javascript_package_manager', e.target.value as PackageManager)}
+                    isAutoDetected={isFieldAutoDetected('javascript_package_manager')}
                 >
                     <option value="npm">npm</option>
                     <option value="bun">bun</option>
                 </Select>
-                {isFieldAutoDetected('javascript_package_manager') && (
-                    <InfoMessage>{t('Auto-detected value')}</InfoMessage>
-                )}
-                {errors.javascript_package_manager && (
-                    <ErrorMessage>
-                        {errors.javascript_package_manager}
-                    </ErrorMessage>
-                )}
+                {isFieldAutoDetected('javascript_package_manager') && <InfoMessage>{t('Auto-detected value')}</InfoMessage>}
+                {errors.javascript_package_manager && <ErrorMessage>{errors.javascript_package_manager}</ErrorMessage>}
             </Field>
         </FieldGroup>
     );

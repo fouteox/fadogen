@@ -1,4 +1,6 @@
-import React, { ChangeEvent } from 'react';
+import type { Resource } from 'i18next';
+import type React from 'react';
+import type { ChangeEvent } from 'react';
 
 export interface User {
     id: number;
@@ -18,7 +20,7 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
         user: User;
     };
     locale: string;
-    translations: TranslationStore | null;
+    translations: Resource | null;
 };
 
 export type FormErrors<T> = Partial<Record<keyof T, string>>;
@@ -42,7 +44,6 @@ export interface ValidationMethod {
 
 export interface SetDataMethod {
     <K extends keyof FormValues>(key: K, value: FormValues[K]): void;
-    validate?: ValidationMethod;
 }
 
 export interface BaseFormSectionProps {
@@ -50,6 +51,7 @@ export interface BaseFormSectionProps {
     setData: SetDataMethod;
     errors: FormErrors<FormValues>;
     validating?: boolean | Record<string, boolean>;
+    validate?: ValidationMethod;
     modifiedFields?: string[];
 }
 
@@ -82,8 +84,6 @@ export interface PrecognitionValidationOptions {
     onSuccess?: (response: unknown) => void;
     onValidationError?: (response: unknown) => void;
 }
-
-export interface PrecognitionFormData extends FormValues {}
 
 export interface Notification {
     type: NotificationType;

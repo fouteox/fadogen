@@ -2,18 +2,8 @@ import { NavbarItem } from '@/components/ui/navbar';
 
 const GithubLink = () => {
     return (
-        <NavbarItem
-            href="https://github.com/fouteox/fadogen"
-            aria-label="Github"
-            external
-        >
-            <svg
-                width="24"
-                height="24"
-                viewBox="0 0 98 96"
-                xmlns="http://www.w3.org/2000/svg"
-                className="size-6 fill-current md:size-5"
-            >
+        <NavbarItem href="https://github.com/fouteox/fadogen" aria-label="Github" external>
+            <svg width="24" height="24" viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg" className="size-6 fill-current md:size-5">
                 <path
                     fillRule="evenodd"
                     clipRule="evenodd"

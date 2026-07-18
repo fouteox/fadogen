@@ -3,14 +3,7 @@ import clsx from 'clsx';
 import React, { forwardRef } from 'react';
 
 export const Textarea = forwardRef(function Textarea(
-    {
-        className,
-        resizable = true,
-        ...props
-    }: { className?: string; resizable?: boolean } & Omit<
-        Headless.TextareaProps,
-        'as' | 'className'
-    >,
+    { className, resizable = true, ...props }: { className?: string; resizable?: boolean } & Omit<Headless.TextareaProps, 'as' | 'className'>,
     ref: React.ForwardedRef<HTMLTextAreaElement>,
 ) {
     return (

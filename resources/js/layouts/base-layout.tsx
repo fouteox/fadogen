@@ -1,3 +1,6 @@
+import { usePage } from '@inertiajs/react';
+import { PropsWithChildren } from 'react';
+import { useTranslation } from 'react-i18next';
 import DiscordLink from '@/components/discord-link';
 import GithubLink from '@/components/github-link';
 import LanguageSwitcher from '@/components/language-switcher';
@@ -5,8 +8,6 @@ import SwitchThemeButton from '@/components/switch-theme-button';
 import { Navbar, NavbarItem, NavbarSection, NavbarSpacer } from '@/components/ui/navbar';
 import { Sidebar, SidebarBody, SidebarItem, SidebarSection } from '@/components/ui/sidebar';
 import { StackedLayout } from '@/components/ui/stacked-layout';
-import { PropsWithChildren } from 'react';
-import { useTranslation } from 'react-i18next';
 import { welcome } from '@/routes';
 import { index } from '@/routes/generator';
 import { NavItem } from '@/types';
@@ -20,12 +21,7 @@ const navItems: NavItem[] = [
 export default function BaseLayout({ children }: PropsWithChildren) {
     const { t } = useTranslation();
 
-    // When server-side rendering, we only render the layout on the client...
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
-    const currentPath = window.location.pathname;
+    const currentPath = usePage().url.split('?')[0];
 
     return (
         <StackedLayout

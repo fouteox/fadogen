@@ -10,7 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "inertiajs/inertia-laravel": "^2.0",
+        "inertiajs/inertia-laravel": "^3.0",
         "laravel-lang/common": "^6.4",
         "laravel/framework": "^v12.0",
         "laravel/horizon": "^5.30",
@@ -26,7 +26,7 @@
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.0",
-        "laravel/boost": "^1.1",
+        "laravel/boost": "^2.2",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.1",
         "laravel/pint": "^1.13",
@@ -72,12 +72,12 @@
         "test:unit": "pest --parallel --coverage --exactly=99.4",
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "bunx concurrently -c \"#c4b5fd,#fdba74,#93c5fd\" \"php artisan horizon\" \"bun run dev\" \"php artisan schedule:work\" --names=horizon,vite,scheduler --kill-others"
+            "vp exec concurrently -c \"#c4b5fd,#fdba74,#93c5fd\" \"php artisan horizon\" \"vp dev\" \"php artisan schedule:work\" --names=horizon,vite,scheduler --kill-others"
         ],
         "dev:ssr": [
-            "bun run build:ssr",
+            "vp run build:ssr",
             "Composer\\Config::disableProcessTimeout",
-            "bunx concurrently -c \"#c4b5fd,#fdba74,#93c5fd\" \"php artisan horizon\" \"php artisan inertia:start-ssr\" \"php artisan schedule:work\" --names=horizon,ssr,scheduler --kill-others"
+            "vp exec concurrently -c \"#c4b5fd,#fdba74,#93c5fd\" \"php artisan horizon\" \"php artisan inertia:start-ssr\" \"php artisan schedule:work\" --names=horizon,ssr,scheduler --kill-others"
         ]
     },
     "extra": {

@@ -60,9 +60,9 @@ FROM oven/bun:1.3-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a
 
 WORKDIR /app
 
-# bootstrap/ssr is produced by `bun run build:ssr` on the runner.
+# bootstrap/ssr is produced by `vp run build:ssr` on the runner.
 COPY --link bootstrap/ssr ./bootstrap/ssr
 
 EXPOSE 13714
 
-CMD ["bun", "bootstrap/ssr/ssr.js"]
+CMD ["bun", "bootstrap/ssr/app.js"]

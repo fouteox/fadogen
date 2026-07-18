@@ -1,25 +1,11 @@
 import clsx from 'clsx';
 import React from 'react';
 
-export function DescriptionList({
-    className,
-    ...props
-}: React.ComponentPropsWithoutRef<'dl'>) {
-    return (
-        <dl
-            {...props}
-            className={clsx(
-                className,
-                'grid grid-cols-1 text-base/6 sm:grid-cols-[min(50%,--spacing(80))_auto] sm:text-sm/6',
-            )}
-        />
-    );
+export function DescriptionList({ className, ...props }: React.ComponentPropsWithoutRef<'dl'>) {
+    return <dl {...props} className={clsx(className, 'grid grid-cols-1 text-base/6 sm:grid-cols-[min(50%,--spacing(80))_auto] sm:text-sm/6')} />;
 }
 
-export function DescriptionTerm({
-    className,
-    ...props
-}: React.ComponentPropsWithoutRef<'dt'>) {
+export function DescriptionTerm({ className, ...props }: React.ComponentPropsWithoutRef<'dt'>) {
     return (
         <dt
             {...props}
@@ -31,10 +17,7 @@ export function DescriptionTerm({
     );
 }
 
-export function DescriptionDetails({
-    className,
-    ...props
-}: React.ComponentPropsWithoutRef<'dd'>) {
+export function DescriptionDetails({ className, ...props }: React.ComponentPropsWithoutRef<'dd'>) {
     return (
         <dd
             {...props}

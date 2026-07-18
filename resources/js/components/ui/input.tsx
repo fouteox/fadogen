@@ -3,9 +3,7 @@ import clsx from 'clsx';
 import type React from 'react';
 import { forwardRef } from 'react';
 
-export function InputGroup({
-    children,
-}: React.ComponentPropsWithoutRef<'span'>) {
+export function InputGroup({ children }: React.ComponentPropsWithoutRef<'span'>) {
     return (
         <span
             data-slot="control"
@@ -22,7 +20,7 @@ export function InputGroup({
     );
 }
 
-const dateTypes = ['date', 'datetime-local', 'month', 'time', 'week'];
+const dateTypes = ['date', 'datetime-local', 'month', 'time', 'week'] as const;
 type DateType = (typeof dateTypes)[number];
 
 export const Input = forwardRef(function Input(
@@ -33,16 +31,8 @@ export const Input = forwardRef(function Input(
     }: {
         className?: string;
         isLoading?: boolean;
-        type?:
-            | 'email'
-            | 'number'
-            | 'password'
-            | 'search'
-            | 'tel'
-            | 'text'
-            | 'url'
-            | DateType;
-    } & Omit<Headless.InputProps, 'as' | 'className'>,
+        type?: 'email' | 'number' | 'password' | 'search' | 'tel' | 'text' | 'url' | DateType;
+    } & Omit<Headless.InputProps, 'as' | 'className' | 'type'>,
     ref: React.ForwardedRef<HTMLInputElement>,
 ) {
     return (
@@ -72,14 +62,7 @@ export const Input = forwardRef(function Input(
                         fill="none"
                         viewBox="0 0 24 24"
                     >
-                        <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                        ></circle>
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path
                             className="opacity-75"
                             fill="currentColor"
@@ -96,7 +79,7 @@ export const Input = forwardRef(function Input(
                 className={clsx([
                     // Date classes
                     props.type &&
-                        dateTypes.includes(props.type) && [
+                        dateTypes.includes(props.type as DateType) && [
                             '[&::-webkit-datetime-edit-fields-wrapper]:p-0',
                             '[&::-webkit-date-and-time-value]:min-h-[1.5em]',
                             '[&::-webkit-datetime-edit]:inline-flex',

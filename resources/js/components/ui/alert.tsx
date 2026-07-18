@@ -51,13 +51,7 @@ export function Alert({
     );
 }
 
-export function AlertTitle({
-    className,
-    ...props
-}: { className?: string } & Omit<
-    Headless.DialogTitleProps,
-    'as' | 'className'
->) {
+export function AlertTitle({ className, ...props }: { className?: string } & Omit<Headless.DialogTitleProps, 'as' | 'className'>) {
     return (
         <Headless.DialogTitle
             {...props}
@@ -69,43 +63,19 @@ export function AlertTitle({
     );
 }
 
-export function AlertDescription({
-    className,
-    ...props
-}: { className?: string } & Omit<
-    Headless.DescriptionProps<typeof Text>,
-    'as' | 'className'
->) {
-    return (
-        <Headless.Description
-            as={Text}
-            {...props}
-            className={clsx(
-                className,
-                'mt-2 text-center text-pretty sm:text-left',
-            )}
-        />
-    );
+export function AlertDescription({ className, ...props }: { className?: string } & Omit<Headless.DescriptionProps<typeof Text>, 'as' | 'className'>) {
+    return <Headless.Description as={Text} {...props} className={clsx(className, 'mt-2 text-center text-pretty sm:text-left')} />;
 }
 
-export function AlertBody({
-    className,
-    ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+export function AlertBody({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
     return <div {...props} className={clsx(className, 'mt-4')} />;
 }
 
-export function AlertActions({
-    className,
-    ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+export function AlertActions({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
     return (
         <div
             {...props}
-            className={clsx(
-                className,
-                'mt-6 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:mt-4 sm:flex-row sm:*:w-auto',
-            )}
+            className={clsx(className, 'mt-6 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:mt-4 sm:flex-row sm:*:w-auto')}
         />
     );
 }
