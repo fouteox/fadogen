@@ -21,7 +21,7 @@
         "laravel/wayfinder": "^0.1.12",
         "league/flysystem-aws-s3-v3": "^3.0",
         "spatie/laravel-data": "^4.13",
-        "symfony/yaml": "^7.2"
+        "symfony/yaml": "^8.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
