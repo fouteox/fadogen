@@ -137,10 +137,10 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr,mode=max
 
-      # The GitHub OIDC identity signs both attested image indexes. Verify the
-      # exact repository/workflow identity before exposing any mutable tag to
-      # Flux or to users; a failed signature therefore cannot be deployed.
-      - name: Sign, verify and publish image tags
+      # Cosign 3 signs both the image and its BuildKit SLSA v1 provenance as
+      # OCI 1.1 artifacts. The latter is the format policy-controller can
+      # enforce without falling back to legacy signature storage.
+      - name: Sign, attest, verify and publish image tags
         shell: bash
         env:
           IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -149,16 +149,37 @@ jobs:
           APP_TAGS: ${{ steps.meta-app.outputs.tags }}
           SSR_TAGS: ${{ steps.meta-ssr.outputs.tags }}
           CERTIFICATE_IDENTITY: https://github.com/${{ github.workflow_ref }}
+          EXPECTED_BUILDER_ID: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
         run: |
           set -euo pipefail
 
-          sign_and_verify() {
-            local image_ref="$IMAGE@$1"
+          secure_image() {
+            local digest="$1"
+            local image_ref="$IMAGE@$digest"
+            local provenance_path="$RUNNER_TEMP/provenance-${digest#sha256:}.json"
+
+            docker buildx imagetools inspect "$image_ref" \
+              --format '{{ json .Provenance.SLSA }}' > "$provenance_path"
+            jq -e --arg expected_builder "$EXPECTED_BUILDER_ID" '
+              (.buildDefinition.buildType | type == "string" and length > 0) and
+              (.runDetails.builder.id == $expected_builder) and
+              (.runDetails.metadata.finishedOn | type == "string" and length > 0)
+            ' "$provenance_path" >/dev/null
 
             cosign sign --yes "$image_ref"
             cosign verify \
               --certificate-identity "$CERTIFICATE_IDENTITY" \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              "$image_ref" >/dev/null
+
+            cosign attest --yes \
+              --predicate "$provenance_path" \
+              --type slsaprovenance1 \
+              "$image_ref"
+            cosign verify-attestation \
+              --certificate-identity "$CERTIFICATE_IDENTITY" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              --type slsaprovenance1 \
               "$image_ref" >/dev/null
           }
 
@@ -175,8 +196,8 @@ jobs:
             docker buildx imagetools create "${tag_args[@]}" "$image_ref"
           }
 
-          sign_and_verify "$APP_DIGEST"
-          sign_and_verify "$SSR_DIGEST"
+          secure_image "$APP_DIGEST"
+          secure_image "$SSR_DIGEST"
           publish_tags "$APP_DIGEST" "$APP_TAGS"
           publish_tags "$SSR_DIGEST" "$SSR_TAGS"
 
