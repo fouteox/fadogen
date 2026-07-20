@@ -21,6 +21,7 @@ jobs:
     runs-on: ${{ vars.SYSTEM_ARCH == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     permissions:
       contents: read
+      id-token: write
       packages: write
 
     steps:
@@ -117,6 +118,24 @@ jobs:
           pull: ${{ github.event_name == 'schedule' }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr,mode=max
+
+      # Le Receiver vérifie le JWT OIDC (dépôt + workflow) et réveille les deux
+      # ImageRepository seulement une fois les images app ET SSR publiées.
+      - name: Notify Flux image automation
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          FLUX_WEBHOOK_URL: https://flux-webhook.florianoster.com/hook/5f6e6bd142588e6456ed18c2c14b63fc303cb2d7226e4bbda4e901591d1a173b
+        with:
+          script: |
+            const token = await core.getIDToken('notification-controller')
+            const response = await fetch(process.env.FLUX_WEBHOOK_URL, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` },
+            })
+
+            if (!response.ok) {
+              throw new Error(`Flux webhook returned HTTP ${response.status}: ${await response.text()}`)
+            }
 
       - name: Cleanup pre-build env
         if: always()
