@@ -8,7 +8,7 @@ on:
   schedule:
     # Weekly security rebuild (Mondays 04:00 UTC): base images ship security
     # fixes under the SAME tag — they only reach us on a fresh build. The
-    # run produces new run-N tags, so Flux Image Automation rolls it out.
+    # run produces new run-N.ATTEMPT.0 tags, so Flux Image Automation rolls it out.
     - cron: '0 4 * * 1'
 
 env:
@@ -17,7 +17,10 @@ env:
 
 jobs:
   build:
-    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    if: >-
+      github.event.pull_request.merged == true ||
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ${{ vars.SYSTEM_ARCH == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     permissions:
       contents: read
@@ -26,10 +29,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: '8.5'
           extensions: dom, curl, libxml, mbstring, zip, pdo, bcmath, intl
@@ -37,12 +40,12 @@ jobs:
           tools: composer:v2
 
       - name: Install Composer dependencies (no-dev — matches production)
-        uses: ramsey/composer-install@v4
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
         with:
           composer-options: '--no-dev'
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1.15.0
         with:
           node-version: '24'
           cache: true
@@ -58,34 +61,43 @@ jobs:
           vp run build:ssr
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Log in to container registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v3.1.2
+
       - name: Extract metadata for App image
         id: meta-app
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,format=short,suffix=-app
             type=ref,event=branch,suffix=-app
-            type=raw,value=run-${{ github.run_number }}-app
+            type=raw,value=run-${{ github.run_number }}.${{ github.run_attempt }}.0-app
             latest
 
       - name: Build and push App image
-        uses: docker/build-push-action@v7
+        id: build-app
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
-          push: true
           target: app
-          tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
+          # Push the attested image by digest only. Deployable tags are created
+          # only after the keyless signature has been verified below.
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          provenance: mode=max,version=v1
+          sbom: true
           # Scheduled runs bypass the layer cache and re-pull bases: a cached
           # rebuild would reuse the old (potentially vulnerable) layers and
           # defeat the purpose. cache-to still refreshes the cache for the
@@ -97,27 +109,72 @@ jobs:
 
       - name: Extract metadata for SSR image
         id: meta-ssr
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,format=short,suffix=-ssr
             type=ref,event=branch,suffix=-ssr
-            type=raw,value=run-${{ github.run_number }}-ssr
+            type=raw,value=run-${{ github.run_number }}.${{ github.run_attempt }}.0-ssr
             ssr
 
       - name: Build and push SSR image
-        uses: docker/build-push-action@v7
+        id: build-ssr
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
-          push: true
           target: ssr
-          tags: ${{ steps.meta-ssr.outputs.tags }}
           labels: ${{ steps.meta-ssr.outputs.labels }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          provenance: mode=max,version=v1
+          sbom: true
           no-cache: ${{ github.event_name == 'schedule' }}
           pull: ${{ github.event_name == 'schedule' }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr,mode=max
+
+      # The GitHub OIDC identity signs both attested image indexes. Verify the
+      # exact repository/workflow identity before exposing any mutable tag to
+      # Flux or to users; a failed signature therefore cannot be deployed.
+      - name: Sign, verify and publish image tags
+        shell: bash
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          APP_DIGEST: ${{ steps.build-app.outputs.digest }}
+          SSR_DIGEST: ${{ steps.build-ssr.outputs.digest }}
+          APP_TAGS: ${{ steps.meta-app.outputs.tags }}
+          SSR_TAGS: ${{ steps.meta-ssr.outputs.tags }}
+          CERTIFICATE_IDENTITY: https://github.com/${{ github.workflow_ref }}
+        run: |
+          set -euo pipefail
+
+          sign_and_verify() {
+            local image_ref="$IMAGE@$1"
+
+            cosign sign --yes "$image_ref"
+            cosign verify \
+              --certificate-identity "$CERTIFICATE_IDENTITY" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              "$image_ref" >/dev/null
+          }
+
+          publish_tags() {
+            local image_ref="$IMAGE@$1"
+            local tags_text="$2"
+            local -a tag_args=()
+
+            while IFS= read -r tag; do
+              [[ -n "$tag" ]] && tag_args+=(--tag "$tag")
+            done <<< "$tags_text"
+
+            ((${#tag_args[@]} > 0))
+            docker buildx imagetools create "${tag_args[@]}" "$image_ref"
+          }
+
+          sign_and_verify "$APP_DIGEST"
+          sign_and_verify "$SSR_DIGEST"
+          publish_tags "$APP_DIGEST" "$APP_TAGS"
+          publish_tags "$SSR_DIGEST" "$SSR_TAGS"
 
       # Le Receiver vérifie le JWT OIDC (dépôt + workflow) et réveille les deux
       # ImageRepository seulement une fois les images app ET SSR publiées.
