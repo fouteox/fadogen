@@ -50,12 +50,16 @@ jobs:
           node-version: '24'
           cache: true
 
-      # Assets are built on the runner (not in the Dockerfile): the env is
-      # decoded, a throwaway APP_KEY is generated, assets + SSR bundle are built,
-      # then the env is deleted. No runtime secret ever reaches the image.
-      - name: Load env and pre-build assets
+      # Assets are built from the versioned example environment. The only key
+      # needed by Laravel is generated for this job and discarded afterwards;
+      # CI never receives the production environment.
+      - name: Prepare isolated env and pre-build assets
+        env:
+          APP_ENV: production
+          APP_DEBUG: 'false'
         run: |
-          echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 -d > .env
+          umask 077
+          cp .env.example .env
           php artisan key:generate --force --ansi
           vp install --frozen-lockfile
           vp run build:ssr
@@ -194,6 +198,6 @@ jobs:
               throw new Error(`Flux webhook returned HTTP ${response.status}: ${await response.text()}`)
             }
 
-      - name: Cleanup pre-build env
+      - name: Cleanup isolated build env
         if: always()
         run: rm -f .env
