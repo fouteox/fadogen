@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  APP_ENV: testing
+  CACHE_STORE: array
+  DB_CONNECTION: sqlite
+  DB_DATABASE: database/database.sqlite
+  MAIL_MAILER: array
+  QUEUE_CONNECTION: sync
+  SESSION_DRIVER: array
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.5'
+          extensions: dom, curl, libxml, mbstring, zip, pdo, pdo_sqlite, sqlite3, bcmath, intl
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1.15.0
+        with:
+          node-version: '24'
+          cache: true
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
+          php artisan key:generate --force --ansi
+          php artisan migrate --force --no-interaction
+
+      - name: Install frontend dependencies
+        run: vp install --frozen-lockfile
+
+      - name: Generate Wayfinder types
+        run: php artisan wayfinder:generate --no-interaction
+
+      - name: Check PHP formatting
+        run: composer test:lint
+
+      - name: Run static analysis
+        run: composer test:types
+
+      - name: Run PHP tests with the project coverage gate
+        run: composer test:unit
+
+      - name: Check frontend formatting
+        run: vp run format:check
+
+      - name: Run frontend lint
+        run: vp run lint:check
+
+      - name: Check TypeScript
+        run: vp run types
+
+      - name: Build production assets and SSR bundle
+        run: vp run build:ssr
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build production App image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          target: app
+          push: false
+          outputs: type=cacheonly
+
+      - name: Build production SSR image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          target: ssr
+          push: false
+          outputs: type=cacheonly

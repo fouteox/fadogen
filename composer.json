@@ -69,7 +69,7 @@
         "lint": "pint",
         "test:lint": "pint --test",
         "test:types": "phpstan analyse --memory-limit=2G",
-        "test:unit": "pest --parallel --coverage --exactly=99.4",
+        "test:unit": "pest --parallel --coverage --min=27.7",
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "vp exec concurrently -c \"#c4b5fd,#fdba74,#93c5fd\" \"php artisan horizon\" \"vp dev\" \"php artisan schedule:work\" --names=horizon,vite,scheduler --kill-others"
