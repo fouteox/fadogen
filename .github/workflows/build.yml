@@ -49,6 +49,7 @@ jobs:
         with:
           node-version: '24'
           cache: true
+          run-install: false
 
       # Assets are built from the versioned example environment. The only key
       # needed by Laravel is generated for this job and discarded afterwards;

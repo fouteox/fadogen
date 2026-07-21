@@ -55,6 +55,7 @@ jobs:
         with:
           node-version: '24'
           cache: true
+          run-install: false
 
       - name: Prepare application
         run: |
