@@ -23,6 +23,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ${{ vars.SYSTEM_ARCH == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     permissions:
+      attestations: write
       contents: read
       id-token: write
       packages: write
@@ -137,6 +138,45 @@ jobs:
           pull: ${{ github.event_name == 'schedule' }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-ssr,mode=max
+
+      # GitHub's hosted attestation service generates Build Level 2 provenance
+      # independently of the BuildKit provenance retained below for the current
+      # cluster policy. Both bundles are attached through OCI 1.1 referrers.
+      - name: Attest App image with GitHub
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build-app.outputs.digest }}
+          push-to-registry: true
+
+      - name: Attest SSR image with GitHub
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build-ssr.outputs.digest }}
+          push-to-registry: true
+
+      - name: Verify GitHub artifact attestations
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          APP_DIGEST: ${{ steps.build-app.outputs.digest }}
+          SSR_DIGEST: ${{ steps.build-ssr.outputs.digest }}
+        run: |
+          set -euo pipefail
+          signer_workflow="$GITHUB_REPOSITORY/.github/workflows/build.yml"
+
+          gh attestation verify "oci://$IMAGE@$APP_DIGEST" \
+            --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$signer_workflow" \
+            --deny-self-hosted-runners \
+            --bundle-from-oci
+          gh attestation verify "oci://$IMAGE@$SSR_DIGEST" \
+            --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$signer_workflow" \
+            --deny-self-hosted-runners \
+            --bundle-from-oci
 
       # Cosign 3 signs both the image and its BuildKit SLSA v1 provenance as
       # OCI 1.1 artifacts. The latter is the format policy-controller can
