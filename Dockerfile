@@ -5,7 +5,7 @@
 # rebuild of the tag lands as a reviewable Dependabot PR (tag + digest kept
 # in sync). PHP version bumps stay deliberate: Dockerfile + setup-php in
 # build.yml + composer.json must move together.
-FROM serversideup/php:8.5-frankenphp@sha256:a0f4447da7612f9bca3c982d0cf33a607cbddf828f4b96a44bfa9f6f037007b6 AS base
+FROM serversideup/php:8.5.8-frankenphp@sha256:a0f4447da7612f9bca3c982d0cf33a607cbddf828f4b96a44bfa9f6f037007b6 AS base
 
 USER root
 
