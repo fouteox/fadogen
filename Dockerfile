@@ -51,6 +51,14 @@ RUN mkdir -p \
     bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
+# The serversideup base grants cap_net_bind_service to frankenphp (bind <1024).
+# Octane listens on 8000, and the file capability makes execve fail with
+# "Operation not permitted" under no_new_privs (PSS restricted,
+# allowPrivilegeEscalation: false). A plain cp does not preserve xattrs,
+# which strips the capability without needing libcap2-bin.
+RUN cp /usr/local/bin/frankenphp /tmp/frankenphp \
+    && mv /tmp/frankenphp /usr/local/bin/frankenphp
+
 USER www-data
 
 ############################################
@@ -62,6 +70,10 @@ WORKDIR /app
 
 # bootstrap/ssr is produced by `vp run build:ssr` on the runner.
 COPY --link bootstrap/ssr ./bootstrap/ssr
+
+# The base image defaults to root; the bundled `bun` user (uid 1000) is
+# enough to serve SSR (read-only bundle, port 13714).
+USER bun
 
 EXPOSE 13714
 
