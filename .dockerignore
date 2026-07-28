@@ -13,6 +13,7 @@ tests
 docs
 node_modules
 vendor
+bootstrap/cache/*.php
 Dockerfile
 compose*.yaml
 
