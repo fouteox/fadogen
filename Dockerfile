@@ -37,6 +37,7 @@ RUN composer dump-autoload --classmap-authoritative --no-dev
 FROM base AS app
 
 COPY --link --chown=33:33 --from=builder /var/www/html/vendor ./vendor
+COPY --link --chown=33:33 --from=builder /var/www/html/bootstrap/cache ./bootstrap/cache
 
 # The build context already carries public/build (pre-built on the runner).
 COPY --link --chown=33:33 . .
