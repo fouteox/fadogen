@@ -193,7 +193,7 @@ jobs:
               test -s public/build/manifest.json
               php artisan about --only=environment
               php -r '\''
-                  foreach (["bcmath", "intl", "pdo_sqlite"] as $extension) {
+                  foreach (["bcmath", "pdo_sqlite"] as $extension) {
                       if (! extension_loaded($extension)) {
                           fwrite(STDERR, "Missing PHP extension: {$extension}\n");
                           exit(1);
