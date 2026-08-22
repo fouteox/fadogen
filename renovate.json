@@ -1,7 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "github>fouteox/renovate-config",
-    "github>fouteox/renovate-config:apps"
-  ]
+  "description": "Configuration spécifique à Fadogen pour Renovate self-hosted. La politique commune est fournie par fouteox/renovate-runner."
 }
