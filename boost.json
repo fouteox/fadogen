@@ -1,6 +1,7 @@
 {
     "agents": [
-        "claude_code"
+        "claude_code",
+        "codex"
     ],
-    "guidelines": []
+    "guidelines": true
 }
