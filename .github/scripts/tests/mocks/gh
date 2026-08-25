@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+if [[ "$1" != "api" ]]; then
+    echo "Unexpected gh invocation: $*" >&2
+    exit 1
+fi
+
+if [[ "$2" == "--paginate" ]]; then
+    endpoint=$3
+else
+    endpoint=$2
+fi
+
+case "$endpoint" in
+    repos/oven-sh/bun/releases/tags/bun-v1.4.0)
+        cat "$FIXTURES_DIR/release.json"
+        ;;
+    repos/oven-sh/bun/actions/runs/123456)
+        cat "$FIXTURES_DIR/run.json"
+        ;;
+    repos/oven-sh/bun/actions/runs/123456/jobs)
+        cat "$FIXTURES_DIR/jobs.json"
+        ;;
+    *)
+        echo "Unexpected GitHub API fixture: $endpoint" >&2
+        exit 1
+        ;;
+esac

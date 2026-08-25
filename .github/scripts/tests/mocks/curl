@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+fixture_digest() {
+    sha256sum "$1" | awk '{ print "sha256:" $1 }'
+}
+
+url=
+
+for argument in "$@"; do
+    if [[ "$argument" == https://* ]]; then
+        url=$argument
+    fi
+done
+
+if [[ "$url" == "https://auth.docker.io/token" ]]; then
+    printf '%s\n' '{"token":"fixture-token"}'
+    exit 0
+fi
+
+if [[ "$url" == https://registry-1.docker.io/v2/oven/bun/blobs/sha256:* ]]; then
+    requested_digest=${url##*/}
+
+    for fixture in "$FIXTURES_DIR"/provenance-*.json; do
+        if [[ "$(fixture_digest "$fixture")" == "$requested_digest" ]]; then
+            output_path=
+
+            for ((index = 1; index <= $#; index++)); do
+                if [[ "${!index}" == "--output" ]]; then
+                    output_index=$((index + 1))
+                    output_path=${!output_index}
+                    break
+                fi
+            done
+
+            if [[ -n "$output_path" ]]; then
+                cp "$fixture" "$output_path"
+            else
+                cat "$fixture"
+            fi
+
+            exit 0
+        fi
+    done
+fi
+
+echo "Unexpected curl invocation: $*" >&2
+exit 1

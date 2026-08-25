@@ -36,46 +36,41 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
+      - name: Test Bun image policy scripts
+        run: .github/scripts/tests/test-bun-policy.sh
+
       - name: Verify pinned ServerSideUp provenance
         env:
           GH_TOKEN: ${{ github.token }}
         run: .github/scripts/verify-serversideup-base.sh
 
-      - name: Install checksum-verified Trivy
+      - name: Verify pinned Bun provenance
         env:
-          TRIVY_VERSION: 0.72.0
-        run: |
-          case "$RUNNER_ARCH" in
-            X64)
-              archive="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
-              checksum=bbb64b9695866ce4a7a8f5c9592002c5961cab378577fa3f8a040df362b9b2ea
-              ;;
-            ARM64)
-              archive="trivy_${TRIVY_VERSION}_Linux-ARM64.tar.gz"
-              checksum=2ca2c023109c2db6b2b77366b6717291452d4531167377d95c79547f0c8e3467
-              ;;
-            *)
-              echo "Unsupported runner architecture: $RUNNER_ARCH" >&2
-              exit 1
-              ;;
-          esac
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/verify-bun-base.sh
 
-          archive_path="$RUNNER_TEMP/$archive"
-          curl --fail --silent --show-error --location \
-            --retry 3 --retry-all-errors \
-            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/${archive}" \
-            --output "$archive_path"
-          printf '%s  %s\n' "$checksum" "$archive_path" | sha256sum --check -
-          tar -xzf "$archive_path" -C "$RUNNER_TEMP" trivy
-          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
-          "$RUNNER_TEMP/trivy" --version
+      - name: Verify pinned Trivy runtime
+        run: |
+          # renovate: datasource=docker depName=ghcr.io/aquasecurity/trivy
+          image_ref="ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969"
+          docker run --rm --read-only --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            "$image_ref" --version
+          echo "TRIVY_IMAGE_REF=$image_ref" >> "$GITHUB_ENV"
 
       - name: Reject newly introduced fixable HIGH/CRITICAL vulnerabilities
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           GH_TOKEN: ${{ github.token }}
           TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache
+          TRIVY_IMAGE_REF: ${{ env.TRIVY_IMAGE_REF }}
         run: .github/scripts/compare-base-vulnerabilities.sh
+
+      - name: Reject fixable HIGH/CRITICAL vulnerabilities in the Bun base
+        env:
+          TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache
+          TRIVY_IMAGE_REF: ${{ env.TRIVY_IMAGE_REF }}
+        run: .github/scripts/scan-bun-base-vulnerabilities.sh
 
   quality:
     name: quality
