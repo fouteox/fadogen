@@ -202,10 +202,43 @@ jobs:
               '\''
             '
 
-          docker run --rm --entrypoint sh "$ssr_image" -euc '
-            bun --version
-            find bootstrap/ssr -maxdepth 1 -type f -name "*.js" -print -quit | grep -q .
+          docker run --rm "$ssr_image" --version
+          docker run --rm "$ssr_image" --eval '
+            const bundle = Bun.file("bootstrap/ssr/app.js");
+
+            if (!await bundle.exists() || bundle.size === 0) {
+              console.error("Missing or empty SSR bundle");
+              process.exit(1);
+            }
           '
+
+          ssr_container="$(docker run --detach "$ssr_image")"
+          cleanup_ssr() {
+            docker rm --force "$ssr_container" >/dev/null 2>&1 || true
+          }
+          trap cleanup_ssr EXIT
+
+          ssr_ready=false
+          for _ in {1..10}; do
+            if docker logs "$ssr_container" 2>&1 | grep -Fq 'Inertia SSR server started.'; then
+              ssr_ready=true
+              break
+            fi
+
+            if [[ "$(docker inspect --format '{{.State.Running}}' "$ssr_container")" != "true" ]]; then
+              break
+            fi
+
+            sleep 1
+          done
+
+          if [[ "$ssr_ready" != "true" ]]; then
+            docker logs "$ssr_container"
+            exit 1
+          fi
+
+          cleanup_ssr
+          trap - EXIT
 
   zizmor:
     name: zizmor (audit workflows)
