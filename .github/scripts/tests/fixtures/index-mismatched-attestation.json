@@ -1,0 +1,41 @@
+{
+  "mediaType": "application/vnd.oci.image.index.v1+json",
+  "manifests": [
+    {
+      "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      }
+    },
+    {
+      "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      }
+    },
+    {
+      "digest": "sha256:d9703c8eea6f7f3099d80d24724b97d24d7d391f891a7d54df3acada0a687dfe",
+      "platform": {
+        "os": "unknown",
+        "architecture": "unknown"
+      },
+      "annotations": {
+        "vnd.docker.reference.type": "attestation-manifest",
+        "vnd.docker.reference.digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      }
+    },
+    {
+      "digest": "sha256:dceafb0867e02a0f6f801e3ffbda1a23643dcfde87572c4080361c6c06b2ec87",
+      "platform": {
+        "os": "unknown",
+        "architecture": "unknown"
+      },
+      "annotations": {
+        "vnd.docker.reference.type": "attestation-manifest",
+        "vnd.docker.reference.digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    }
+  ]
+}

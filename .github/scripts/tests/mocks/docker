@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+fixture_digest() {
+    sha256sum "$1" | awk '{ print "sha256:" $1 }'
+}
+
+if [[ "$1" == "buildx" && "$2" == "imagetools" && "$3" == "inspect" ]]; then
+    reference=$4
+
+    if [[ "$reference" == oven/bun:* ]]; then
+        case "${SCENARIO:?}" in
+            valid)
+                fixture="index-valid.json"
+                ;;
+            malformed-index)
+                fixture="index-malformed.json"
+                ;;
+            mismatched-attestation)
+                fixture="index-mismatched-attestation.json"
+                ;;
+            inconsistent-architectures)
+                fixture="index-inconsistent.json"
+                ;;
+            *)
+                echo "Unexpected provenance scenario: $SCENARIO" >&2
+                exit 1
+                ;;
+        esac
+
+        cat "$FIXTURES_DIR/$fixture"
+        exit 0
+    fi
+
+    if [[ "$reference" == oven/bun@sha256:* ]]; then
+        requested_digest=${reference#oven/bun@}
+
+        for fixture in "$FIXTURES_DIR"/attestation-*.json; do
+            if [[ "$(fixture_digest "$fixture")" == "$requested_digest" ]]; then
+                cat "$fixture"
+                exit 0
+            fi
+        done
+
+        echo "Unknown fixture attestation: $requested_digest" >&2
+        exit 1
+    fi
+fi
+
+if [[ "$1" == "run" ]]; then
+    output_path=
+
+    for ((index = 1; index <= $#; index++)); do
+        if [[ "${!index}" == "--output" ]]; then
+            output_index=$((index + 1))
+            output_path=${!output_index}
+            break
+        fi
+    done
+
+    if [[ -z "$output_path" ]]; then
+        echo "Mock Trivy invocation has no --output argument." >&2
+        exit 1
+    fi
+
+    case "${SCENARIO:?}" in
+        scan-clean)
+            cp "$FIXTURES_DIR/trivy-clean.json" "$output_path"
+            ;;
+        scan-vulnerable)
+            cp "$FIXTURES_DIR/trivy-vulnerable.json" "$output_path"
+            ;;
+        *)
+            echo "Unexpected scan scenario: $SCENARIO" >&2
+            exit 1
+            ;;
+    esac
+
+    exit 0
+fi
+
+echo "Unexpected docker invocation: $*" >&2
+exit 1

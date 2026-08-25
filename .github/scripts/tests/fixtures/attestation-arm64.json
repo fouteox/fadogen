@@ -1,0 +1,16 @@
+{
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
+  "artifactType": "application/vnd.docker.attestation.manifest.v1+json",
+  "layers": [
+    {
+      "mediaType": "application/vnd.in-toto+json",
+      "digest": "sha256:56fa64ea9ae6f941c2e8cd118f05bab627830821e2c698541f0e1c952896ecc8",
+      "annotations": {
+        "in-toto.io/predicate-type": "https://slsa.dev/provenance/v1"
+      }
+    }
+  ],
+  "subject": {
+    "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  }
+}

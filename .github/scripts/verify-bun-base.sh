@@ -274,6 +274,8 @@ jq -s -e \
             and .status == "completed"
             and .conclusion == "success"
             and .head_sha == $source_sha
+            and .runner_group_name == "GitHub Actions"
+            and (.labels | index("ubuntu-latest")) != null
         )
     ] | length == 1
     ' \

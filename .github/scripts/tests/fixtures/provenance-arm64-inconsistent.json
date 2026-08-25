@@ -1,0 +1,54 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "predicateType": "https://slsa.dev/provenance/v1",
+  "subject": [
+    {
+      "name": "pkg:docker/oven/bun@1.4.0-distroless?platform=linux%2Farm64",
+      "digest": {
+        "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    }
+  ],
+  "predicate": {
+    "buildDefinition": {
+      "buildType": "https://github.com/moby/buildkit/blob/master/docs/attestations/slsa-definitions.md",
+      "externalParameters": {
+        "configSource": {
+          "path": "Dockerfile"
+        },
+        "request": {
+          "args": {
+            "build-arg:BUN_VERSION": "bun-v1.4.0",
+            "label:org.opencontainers.image.revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "label:org.opencontainers.image.source": "https://github.com/oven-sh/bun",
+            "label:org.opencontainers.image.version": "1.4.0-distroless"
+          }
+        }
+      },
+      "internalParameters": {
+        "github_event_name": "release",
+        "github_ref": "refs/tags/bun-v1.4.0",
+        "github_repository": "oven-sh/bun",
+        "github_run_id": "999999",
+        "github_run_attempt": "1"
+      }
+    },
+    "runDetails": {
+      "builder": {
+        "id": "https://github.com/oven-sh/bun/actions/runs/999999/attempts/1"
+      },
+      "metadata": {
+        "startedOn": "2026-08-20T14:09:26Z",
+        "finishedOn": "2026-08-20T14:11:27Z",
+        "buildkit_metadata": {
+          "vcs": {
+            "localdir:context": "dockerhub/distroless",
+            "localdir:dockerfile": "dockerhub/distroless",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "source": "https://github.com/oven-sh/bun"
+          }
+        }
+      }
+    }
+  }
+}

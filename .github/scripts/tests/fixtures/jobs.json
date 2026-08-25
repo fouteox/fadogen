@@ -1,0 +1,14 @@
+{
+  "jobs": [
+    {
+      "name": "Release to Dockerhub (distroless, -distroless)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-latest"
+      ]
+    }
+  ]
+}

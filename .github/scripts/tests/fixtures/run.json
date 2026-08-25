@@ -1,0 +1,15 @@
+{
+  "status": "completed",
+  "conclusion": "failure",
+  "event": "release",
+  "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "head_branch": "bun-v1.4.0",
+  "repository": {
+    "full_name": "oven-sh/bun"
+  },
+  "head_repository": {
+    "full_name": "oven-sh/bun"
+  },
+  "path": ".github/workflows/release.yml",
+  "run_attempt": 1
+}
