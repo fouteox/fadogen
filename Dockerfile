@@ -65,19 +65,20 @@ USER www-data
 ############################################
 # SSR Image
 ############################################
-FROM oven/bun:1.3-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f AS ssr
+FROM oven/bun:1.4-distroless@sha256:a8919d4a092a234f7184ac6d3960a2d860fea73e034709e1752a7d0de09913f8 AS ssr
 
 WORKDIR /app
 
 # bootstrap/ssr is produced by `vp run build:ssr` on the runner, under
 # `umask 077` (build.yml) — the bundle lands 0600 in the context, so it
-# must be chowned to bun or the non-root server cannot read it.
+# must be chowned to the runtime user or the non-root server cannot read it.
 COPY --link --chown=1000:1000 bootstrap/ssr ./bootstrap/ssr
 
-# The base image defaults to root; the bundled `bun` user (uid 1000) is
-# enough to serve SSR (read-only bundle, port 13714).
-USER bun
+# Keep the numeric non-root identity enforced by the GitOps deployment. Numeric
+# IDs do not depend on a shell or a named /etc/passwd entry in distroless.
+USER 1000:1000
 
 EXPOSE 13714
 
-CMD ["bun", "bootstrap/ssr/app.js"]
+ENTRYPOINT ["/usr/local/bin/bun"]
+CMD ["bootstrap/ssr/app.js"]
