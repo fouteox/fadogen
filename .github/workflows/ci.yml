@@ -216,9 +216,9 @@ jobs:
         with:
           persist-credentials: false
 
-      # 1.26.1 = dernière version saine du manifeste embarqué par l'action
-      # v0.6.0 (jamais 1.27.0 : fuite de credentials, GHSA-f42p-wjw5-97qh) ;
-      # repasser à >= 1.28.0 à la prochaine release de zizmor-action.
+      # Renovate met à jour atomiquement le SHA de l'action et l'input version.
+      # Le manifeste embarqué résout cette version vers une image tag@digest ;
+      # la politique du runner interdit Zizmor 1.27.0 (GHSA-f42p-wjw5-97qh).
       # Bloquant via annotations + exit codes ; le mode SARIF
       # (advanced-security) ne fait jamais échouer le job.
       - name: Audit workflows with zizmor
