@@ -3,9 +3,9 @@
 ############################################
 # Digest-pinned (supply-chain): builds are reproducible and every upstream
 # rebuild of the tag lands as a reviewable Renovate PR (tag + digest kept
-# in sync). PHP version bumps stay deliberate: Dockerfile + setup-php in
-# build.yml + composer.json must move together.
-FROM serversideup/php:8.5.9-frankenphp@sha256:c8e9d95cd6b83180662f63de646937f3b304041ac4edfbd95ff8bd684467d035 AS base
+# in sync). Renovate moves this base and Composer's requirement/platform
+# together; setup-php tracks the same minor compatibility line.
+FROM serversideup/php:8.5.10-frankenphp@sha256:558d9d93d8f63a08ea6c99a48475faff557d8bd315bb81a876181e9ec1e50865 AS base
 
 USER root
 
@@ -65,7 +65,7 @@ USER www-data
 ############################################
 # SSR Image
 ############################################
-FROM oven/bun:1.4-distroless@sha256:a8919d4a092a234f7184ac6d3960a2d860fea73e034709e1752a7d0de09913f8 AS ssr
+FROM oven/bun:1.4-distroless@sha256:1a0c31c7c5f9d193aedf60fe1cebdeb76ac8f6e29f24be8dd8cbd6df72df26ec AS ssr
 
 WORKDIR /app
 
