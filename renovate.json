@@ -1,4 +1,71 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Configuration spécifique à Fadogen pour Renovate self-hosted. La politique commune est fournie par fouteox/renovate-runner."
+  "description": "Configuration Fadogen pour Renovate self-hosted ; politique commune fournie par fouteox/renovate-runner.",
+  "customManagers": [
+    {
+      "description": "Keep Composer's platform aligned with the production ServerSideUp PHP image.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^composer\\.json$/"
+      ],
+      "matchStrings": [
+        "\\\"platform\\\"\\s*:\\s*\\{[^}]*\\\"php\\\"\\s*:\\s*\\\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\\\""
+      ],
+      "depNameTemplate": "php",
+      "packageNameTemplate": "serversideup/php",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+\\.\\d+)-frankenphp$"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Bump the application PHP floor so Composer updates its lock artifact.",
+      "matchManagers": [
+        "composer"
+      ],
+      "matchDepNames": [
+        "php"
+      ],
+      "matchPackageNames": [
+        "containerbase/php-prebuild"
+      ],
+      "rangeStrategy": "bump"
+    },
+    {
+      "description": "Composer's platform field stores a PHP version, not an image reference, so it cannot carry an OCI digest.",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchFileNames": [
+        "composer.json"
+      ],
+      "matchPackageNames": [
+        "serversideup/php"
+      ],
+      "pinDigests": false
+    },
+    {
+      "description": "Update the production image, Composer platform and PHP requirement atomically.",
+      "matchPackageNames": [
+        "serversideup/php",
+        "containerbase/php-prebuild"
+      ],
+      "groupName": "PHP runtime",
+      "groupSlug": "php-runtime",
+      "minimumGroupSize": 3
+    },
+    {
+      "description": "Keep same-tag ServerSideUp image rebuilds reviewable without waiting for Composer fields that have no digest.",
+      "matchPackageNames": [
+        "serversideup/php"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "groupName": "PHP runtime digest refresh",
+      "groupSlug": "php-runtime-digest",
+      "minimumGroupSize": 1
+    }
+  ]
 }

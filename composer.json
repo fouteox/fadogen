@@ -9,32 +9,32 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.4",
-        "inertiajs/inertia-laravel": "^3.0",
-        "laravel-lang/common": "^6.4",
-        "laravel/framework": "^13.20",
-        "laravel/horizon": "^5.30",
-        "laravel/octane": "^2.7",
-        "laravel/reverb": "^1.0",
-        "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.12",
-        "league/flysystem-aws-s3-v3": "^3.0",
-        "spatie/laravel-data": "^4.13",
-        "symfony/yaml": "^8.1"
+        "php": "^8.5.9",
+        "inertiajs/inertia-laravel": "^3.3.3",
+        "laravel-lang/common": "^6.8.0",
+        "laravel/framework": "^13.30.1",
+        "laravel/horizon": "^5.48.3",
+        "laravel/octane": "^2.19.1",
+        "laravel/reverb": "^1.11.1",
+        "laravel/sanctum": "^4.3.3",
+        "laravel/tinker": "^3.0.2",
+        "laravel/wayfinder": "^0.1.21",
+        "league/flysystem-aws-s3-v3": "^3.35.3",
+        "spatie/laravel-data": "^4.23.0",
+        "symfony/yaml": "^8.1.6"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.23",
+        "fakerphp/faker": "^1.24.1",
         "larastan/larastan": "^3.0",
-        "laravel/boost": "^2.2",
-        "laravel/breeze": "^2.3",
-        "laravel/pail": "^1.1",
-        "laravel/pint": "^1.13",
-        "laravel/sail": "^1.26",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.1",
-        "pestphp/pest": "^5.0",
-        "pestphp/pest-plugin-laravel": "^5.0"
+        "laravel/boost": "^2.7.1",
+        "laravel/breeze": "^2.4.2",
+        "laravel/pail": "^1.2.7",
+        "laravel/pint": "^1.31.0",
+        "laravel/sail": "^1.67.0",
+        "mockery/mockery": "^1.6.15",
+        "nunomaduro/collision": "^8.9.5",
+        "pestphp/pest": "^5.1.4",
+        "pestphp/pest-plugin-laravel": "^5.0.1"
     },
     "autoload": {
         "psr-4": {
@@ -92,7 +92,11 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
-        }
+        },
+        "platform": {
+            "php": "8.5.9"
+        },
+        "platform-check": true
     },
     "minimum-stability": "stable",
     "prefer-stable": true
