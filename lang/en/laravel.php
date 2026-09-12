@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 return [
     'name_project' => 'What is the name of the project?',
-    'name_project_validation' => 'The project name can only contain letters, numbers, hyphens and underscores.',
+    'name_project_validation' => 'Use a valid hostname (up to 255 characters): letters, numbers, dots and internal hyphens.',
     'name_project_exists' => 'The folder ":name" already exists. Please choose another name.',
     'php_version' => 'What PHP version would you like to use?',
     'database' => 'Which database will your application use?',

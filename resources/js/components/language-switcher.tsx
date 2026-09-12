@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dropdown, DropdownButton, DropdownItem, DropdownLabel, DropdownMenu } from '@/components/ui/dropdown';
 import { NavbarItem } from '@/components/ui/navbar';
@@ -14,11 +14,14 @@ type Language = (typeof LANGUAGES)[number];
 
 const LanguageSwitcher = () => {
     const { i18n } = useTranslation();
-    const [currentLang, setCurrentLang] = useState<Language>(LANGUAGES.find((lang) => lang.code === i18n.language) ?? LANGUAGES[0]);
+    const currentLang = LANGUAGES.find((lang) => lang.code === (i18n.resolvedLanguage ?? i18n.language)) ?? LANGUAGES[1];
+
+    useEffect(() => {
+        document.documentElement.lang = currentLang.code;
+    }, [currentLang.code]);
 
     const handleLanguageChange = (language: Language) => {
         void i18n.changeLanguage(language.code);
-        setCurrentLang(language);
     };
 
     return (

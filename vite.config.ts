@@ -6,6 +6,12 @@ import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite-plus';
 
 export default defineConfig({
+    test: {
+        environment: 'jsdom',
+        include: ['resources/js/**/*.test.{ts,tsx}'],
+        environmentOptions: { jsdom: { url: 'http://localhost' } },
+    },
+    resolve: { alias: { '@': new URL('./resources/js', import.meta.url).pathname } },
     fmt: {
         printWidth: 150,
         tabWidth: 4,

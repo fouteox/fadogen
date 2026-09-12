@@ -13,7 +13,6 @@ interface OptionalFeaturesProps {
 export const OptionalFeatures = ({ data, handleFeatureChange, modifiedFields = [] }: OptionalFeaturesProps) => {
     const { t } = useTranslation();
 
-    // Vérifier si un champ de features spécifique a été modifié automatiquement
     const isFeatureAutoDetected = (feature: string): boolean => {
         return modifiedFields.includes('features') && data.features.includes(feature);
     };

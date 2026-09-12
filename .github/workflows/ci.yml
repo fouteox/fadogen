@@ -142,6 +142,9 @@ jobs:
       - name: Check TypeScript
         run: vp run types
 
+      - name: Run frontend regression tests
+        run: vp run test
+
       - name: Build production assets and SSR bundle
         run: |
           umask 077

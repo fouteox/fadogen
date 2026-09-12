@@ -329,5 +329,6 @@
     "You're logged in!": "¡Usted está conectado!",
     "Your DDEV version (:current) is outdated. Minimum required version is :min": "Su versión de DDEV (:current) está desactualizada. La versión mínima requerida es :min",
     "Your email address is unverified.": "Su dirección de correo electrónico no está verificada.",
-    "Your template is ready!": "¡Su plantilla está lista!"
+    "Your template is ready!": "¡Su plantilla está lista!",
+    "Copy command": "Copiar comando"
 }

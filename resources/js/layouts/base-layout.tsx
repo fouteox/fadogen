@@ -15,7 +15,6 @@ import { NavItem } from '@/types';
 const navItems: NavItem[] = [
     { title: 'Home', href: welcome().url },
     { title: 'Generate', href: index().url },
-    // { label: 'Deploy', href: route('deploy', {}, false) },
 ];
 
 export default function BaseLayout({ children }: PropsWithChildren) {

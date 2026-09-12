@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 return [
     'name_project' => '¿Cuál es el nombre del proyecto?',
-    'name_project_validation' => 'El nombre del proyecto sólo puede contener letras, números, guiones y guiones bajos.',
+    'name_project_validation' => 'Use un nombre de host válido (máximo 255 caracteres): letras, números, puntos y guiones internos.',
     'name_project_exists' => 'La carpeta ":name" ya existe. Por favor, elija otro nombre.',
     'php_version' => '¿Qué versión de PHP le gustaría usar?',
     'database' => '¿Qué base de datos usará su aplicación?',

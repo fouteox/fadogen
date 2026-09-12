@@ -35,7 +35,7 @@ export const BasicInformation = ({ data, setData, errors, validate, modifiedFiel
     const { t } = useTranslation();
     const handlers = useBasicInformationHandlers(setData);
 
-    const isFieldAutoDetected = (field: string): boolean => {
+    const isFieldAutoDetected = (field: keyof typeof data): boolean => {
         return modifiedFields.includes(field);
     };
 
@@ -48,7 +48,7 @@ export const BasicInformation = ({ data, setData, errors, validate, modifiedFiel
                     value={data.project_name}
                     placeholder={'my-awesome-project'}
                     onChange={handlers.handleProjectNameChange}
-                    onBlur={() => validate?.('project_name')}
+                    onBlur={() => validate('project_name')}
                     required
                     invalid={!!errors.project_name}
                 />
@@ -61,7 +61,7 @@ export const BasicInformation = ({ data, setData, errors, validate, modifiedFiel
                     name="php_version"
                     value={data.php_version}
                     onChange={handlers.handlePhpVersionChange}
-                    onBlur={() => validate?.('php_version')}
+                    onBlur={() => validate('php_version')}
                     required
                     invalid={!!errors.php_version}
                     isAutoDetected={isFieldAutoDetected('php_version')}
@@ -80,7 +80,7 @@ export const BasicInformation = ({ data, setData, errors, validate, modifiedFiel
                     name="database"
                     value={data.database}
                     onChange={handlers.handleDatabaseChange}
-                    onBlur={() => validate?.('database')}
+                    onBlur={() => validate('database')}
                     required
                     invalid={!!errors.database}
                     isAutoDetected={isFieldAutoDetected('database')}

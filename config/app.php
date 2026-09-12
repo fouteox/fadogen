@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+$previousKeys = env('APP_PREVIOUS_KEYS', '');
+
+if (! is_string($previousKeys)) {
+    throw new InvalidArgumentException('APP_PREVIOUS_KEYS must be a comma-separated string.');
+}
+
 return [
 
     /*
@@ -86,6 +92,8 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
+    'template_retention_days' => (int) env('TEMPLATE_RETENTION_DAYS', 7),
+
     /*
     |--------------------------------------------------------------------------
     | Encryption Key
@@ -103,7 +111,7 @@ return [
 
     'previous_keys' => [
         ...array_filter(
-            explode(',', env('APP_PREVIOUS_KEYS', ''))
+            explode(',', $previousKeys)
         ),
     ],
 

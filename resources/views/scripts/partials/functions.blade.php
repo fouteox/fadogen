@@ -34,10 +34,6 @@ cleanup() {
     fi
 }
 
-version_gt() {
-    test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"
-}
-
 detect_language() {
     if [ -n "$LANG" ]; then
         DETECTED_LANG=$(echo "$LANG" | cut -d'_' -f1)

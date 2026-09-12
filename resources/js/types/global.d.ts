@@ -1,6 +1,8 @@
-import { PageProps as InertiaPageProps } from '@inertiajs/core';
-import { PageProps as AppPageProps } from './';
+import '@inertiajs/core';
+import type { PageProps } from './index';
 
 declare module '@inertiajs/core' {
-    interface PageProps extends InertiaPageProps, AppPageProps {}
+    interface InertiaConfig {
+        sharedPageProps: PageProps;
+    }
 }

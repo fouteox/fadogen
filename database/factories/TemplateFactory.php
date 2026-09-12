@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\PhpVersionEnum;
 use App\Enums\TemplateStatusEnum;
 use App\Models\Template;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<Template> */
 final class TemplateFactory extends Factory
 {
     protected $model = Template::class;
@@ -20,18 +20,18 @@ final class TemplateFactory extends Factory
     {
         return [
             'data' => [
-                'project_name' => $this->faker->words(3, true),
-                'server_contact' => $this->faker->email(),
-                'needs_traefik' => $this->faker->boolean(),
-                'network' => $this->faker->optional()->word(),
-                'php_version' => $this->faker->randomElement(array_column(PhpVersionEnum::cases(), 'value')),
-                'php_extensions' => $this->faker->randomElements(['pdo', 'mysql', 'redis', 'gd'], 2),
-                'database' => $this->faker->randomElement(['mariadb', 'mysql', 'postgresql']),
+                'project_name' => $this->faker->unique()->slug(3),
+                'php_version' => '8.5',
+                'database' => 'sqlite',
                 'starter_kit' => 'none',
-                'mono_repo' => 'none',
+                'custom_starter_kit' => null,
+                'livewire_volt' => false,
+                'workos' => false,
                 'testing_framework' => 'pest',
-                'queue' => 'none',
+                'queue_type' => null,
+                'queue_driver' => null,
                 'features' => [],
+                'javascript_package_manager' => 'npm',
                 'initialize_git' => true,
             ],
             'status' => TemplateStatusEnum::Pending,

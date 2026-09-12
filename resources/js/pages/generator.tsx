@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Toaster } from 'sonner';
 import AppHead from '@/components/app-head';
@@ -23,6 +22,7 @@ export default function Generator() {
         validating,
         errors,
         isLoading,
+        detectionErrors,
         modifiedFields,
         handleSubmit,
         handleStackChange,
@@ -32,17 +32,6 @@ export default function Generator() {
         detectDependencies,
     } = useLaravelForm();
 
-    const validateAllFields = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        validate({
-            only: ['project_name', 'php_version', 'database', 'starter_kit', 'custom_starter_kit', 'testing_framework'],
-            onSuccess: () => {
-                handleSubmit(e);
-            },
-        });
-    };
-
     return (
         <>
             <AppHead title={t('Generator')} />
@@ -50,21 +39,14 @@ export default function Generator() {
 
             <Divider className="my-10 mt-6" />
 
-            <form onSubmit={validateAllFields}>
+            <form onSubmit={handleSubmit}>
                 <section className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
                     <div className="space-y-1">
                         <Subheading>{t('General information about the project')}</Subheading>
                         <Text>{t('Configure the basic settings needed to initialize your project.')}</Text>
                     </div>
 
-                    <BasicInformation
-                        data={data}
-                        setData={setData}
-                        errors={errors}
-                        validating={validating}
-                        validate={validate}
-                        modifiedFields={modifiedFields}
-                    />
+                    <BasicInformation data={data} setData={setData} errors={errors} validate={validate} modifiedFields={modifiedFields} />
                 </section>
 
                 <Divider className="my-10" soft />
@@ -79,7 +61,8 @@ export default function Generator() {
                         data={data}
                         setData={setData}
                         errors={errors}
-                        validating={validating}
+                        isLoading={isLoading}
+                        packageError={detectionErrors.package}
                         validate={validate}
                         modifiedFields={modifiedFields}
                         handleStackChange={handleStackChange}
@@ -100,7 +83,6 @@ export default function Generator() {
                             data={data}
                             setData={setData}
                             errors={errors}
-                            validating={validating}
                             modifiedFields={modifiedFields}
                             handleQueueChange={handleQueueChange}
                         />

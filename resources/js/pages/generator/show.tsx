@@ -1,9 +1,10 @@
 import { Head, usePoll } from '@inertiajs/react';
 import { Check, Copy, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AnimatedBorder from '@/components/animated-border';
+import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 
 interface Template {
@@ -25,7 +26,17 @@ const fadeIn = {
 export default function Show({ template }: Props) {
     const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
+    const copyTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const mounted = useRef(false);
     const { stop } = usePoll(2000);
+
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+            clearTimeout(copyTimeout.current);
+        };
+    }, []);
 
     const getPageTitle = () => {
         switch (template.status) {
@@ -51,8 +62,10 @@ export default function Show({ template }: Props) {
 
         try {
             await navigator.clipboard.writeText(template.download_command);
+            if (!mounted.current) return;
+            clearTimeout(copyTimeout.current);
             setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            copyTimeout.current = setTimeout(() => setCopied(false), 2000);
         } catch (error) {
             console.error('Erreur lors de la copie dans le presse-papiers :', error);
         }
@@ -121,15 +134,9 @@ export default function Show({ template }: Props) {
                                                 {template.download_command}
                                             </motion.span>
                                         </div>
-                                        <motion.button
-                                            onClick={copyToClipboard}
-                                            className="p-4 text-neutral-600 transition-colors duration-200 hover:text-neutral-800 focus:outline-none dark:text-neutral-300 dark:hover:text-neutral-100"
-                                            type="button"
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
+                                        <Button plain aria-label={t('Copy command')} onClick={copyToClipboard} className="m-2" type="button">
                                             {copied ? <Check className="h-6 w-6" /> : <Copy className="h-6 w-6" />}
-                                        </motion.button>
+                                        </Button>
                                     </div>
                                 </AnimatedBorder>
                             </motion.div>

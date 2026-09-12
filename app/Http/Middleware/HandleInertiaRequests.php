@@ -20,14 +20,6 @@ final class HandleInertiaRequests extends Middleware
     public function __construct(private readonly I18NextTranslationsLoader $translationsLoader) {}
 
     /**
-     * Determine the current asset version.
-     */
-    public function version(Request $request): ?string
-    {
-        return parent::version($request);
-    }
-
-    /**
      * Define the props that are shared by default.
      *
      * @return array<string, mixed>

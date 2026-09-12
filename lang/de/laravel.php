@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 return [
     'name_project' => 'Wie soll Ihr Projekt heißen?',
-    'name_project_validation' => 'Der Projektname darf nur Buchstaben, Zahlen, Bindestriche und Unterstriche enthalten.',
+    'name_project_validation' => 'Verwenden Sie einen gültigen Hostnamen (maximal 255 Zeichen): Buchstaben, Ziffern, Punkte und innenliegende Bindestriche.',
     'name_project_exists' => 'Der Ordner ":name" existiert bereits. Bitte wählen Sie einen anderen Namen.',
     'php_version' => 'Welche PHP-Version möchten Sie verwenden?',
     'database' => 'Welche Datenbank wird Ihre Anwendung verwenden?',

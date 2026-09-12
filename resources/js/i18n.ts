@@ -1,60 +1,29 @@
-import i18n, { type Resource } from 'i18next';
+import { createInstance, type Resource } from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import HttpBackend from 'i18next-http-backend';
 import { initReactI18next } from 'react-i18next';
 
-let i18nInstance: typeof i18n | null = null;
+export const initI18n = (locale: string, resources: Resource, ssr = import.meta.env.SSR) => {
+    const instance = createInstance().use(initReactI18next);
 
-const createI18nInstance = () => {
-    const instance = i18n.createInstance();
+    if (!ssr) {
+        instance.use(LanguageDetector).use(HttpBackend);
+    }
 
-    void instance.use(initReactI18next).init({
+    void instance.init({
         supportedLngs: ['en', 'fr', 'de', 'es'],
         fallbackLng: 'en',
-        interpolation: {
-            escapeValue: false,
+        lng: locale,
+        resources,
+        interpolation: { escapeValue: false },
+        partialBundledLanguages: !ssr,
+        initAsync: false,
+        detection: {
+            order: ['cookie', 'navigator'],
+            lookupCookie: 'locale',
+            caches: ['cookie'],
         },
-        partialBundledLanguages: true,
     });
-
-    if (!import.meta.env.SSR) {
-        void instance
-            .use(LanguageDetector)
-            .use(HttpBackend)
-            .init({
-                detection: {
-                    order: ['cookie', 'navigator'],
-                    lookupCookie: 'locale',
-                    caches: ['cookie'],
-                },
-            });
-    }
 
     return instance;
 };
-
-export const initI18n = (locale: string = 'en', resources: Resource = {}) => {
-    i18nInstance = createI18nInstance();
-
-    void i18nInstance.init({
-        lng: locale,
-        resources,
-    });
-
-    return i18nInstance;
-};
-
-export const setLocale = (locale: string) => {
-    if (!i18nInstance) {
-        console.error('i18n instance not initialized');
-        return;
-    }
-
-    if (i18nInstance.languages?.includes(locale)) {
-        void i18nInstance.changeLanguage(locale);
-    } else {
-        console.error(`Locale ${locale} not found.`);
-    }
-};
-
-export default i18nInstance;

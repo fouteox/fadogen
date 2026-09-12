@@ -63,8 +63,9 @@ while true; do
         error "Processing timeout after $TIMEOUT seconds"
     fi
 
-    STATUS=$(curl -fsSL -D "$TMP_DIR/headers" -o "$TMP_DIR/template.tar" "$DOWNLOAD_URL")
-    STATUS_CODE=$(grep -i "^HTTP" "$TMP_DIR/headers" | tail -n1 | awk '{print $2}')
+    if ! STATUS_CODE=$(curl -sSL --connect-timeout 10 --max-time 30 -w '%{http_code}' -o "$TMP_DIR/template.tar" "$DOWNLOAD_URL"); then
+        error "Failed to contact the template server"
+    fi
 
     case "$STATUS_CODE" in
         200)
@@ -86,7 +87,10 @@ while true; do
     esac
 done
 
-mkdir -p "$PROJECT_NAME"
+if [ -e "$PROJECT_NAME" ]; then
+    error "Directory '$PROJECT_NAME' already exists"
+fi
+mkdir "$PROJECT_NAME"
 
 @include('scripts.partials.extract-archive')
 
