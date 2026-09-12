@@ -10,4 +10,6 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('/templates', CreateTemplateController::class)->name('api.templates.store');
+Route::post('/templates', CreateTemplateController::class)
+    ->middleware('throttle:template-creation')
+    ->name('api.templates.store');

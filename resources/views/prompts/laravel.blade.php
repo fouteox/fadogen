@@ -1,17 +1,15 @@
-<?php
+{!! "<?php" !!}
 
 declare(strict_types=1);
 
 require 'vendor/autoload.php';
-
-use App\Enums\PhpVersionEnum;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
-final class Laravel
+final class LaravelConfiguration
 {
     private array $answers = [
         'project_name' => 'laravel',
@@ -43,69 +41,51 @@ final class Laravel
 
     private function formatOutput(): array
     {
-        $output = [
+        return [
             'project_name' => $this->answers['project_name'],
             'php_version' => $this->answers['php_version'],
             'database' => $this->answers['database'],
             'starter_kit' => $this->answers['starter_kit'],
+            'custom_starter_kit' => null,
+            'livewire_volt' => $this->answers['livewire_volt'],
+            'workos' => $this->answers['workos'],
             'testing_framework' => $this->answers['testing_framework'],
+            'queue_type' => match ($this->answers['queue']) {
+                'queue' => 'native',
+                'horizon' => 'horizon',
+                default => null,
+            },
+            'queue_driver' => $this->answers['queue'] === 'none' ? null : $this->answers['queue_driver'],
             'features' => $this->answers['features'],
+            'javascript_package_manager' => $this->answers['javascript_package_manager'],
             'initialize_git' => $this->answers['initialize_git'],
         ];
-
-        if (! empty($this->answers['starter_kit_stack'])) {
-            $output['starter_kit_stack'] = $this->answers['starter_kit_stack'];
-        }
-
-        if ($this->answers['livewire_volt']) {
-            $output['livewire_volt'] = $this->answers['livewire_volt'];
-        }
-
-        if ($this->answers['queue'] !== 'none') {
-            $output['queue_type'] = $this->answers['queue'] === 'queue' ? 'native' : 'horizon';
-            $output['queue_driver'] = $this->answers['queue_driver'];
-        }
-
-        $output['javascript_package_manager'] = $this->answers['javascript_package_manager'];
-
-        return $output;
     }
 
     private function promptForBasicQuestions(): void
     {
-        $isValidProjectName = false;
-
-        while (! $isValidProjectName) {
-            $projectName = text(
-                label: __('laravel.name_project'),
-                default: $this->answers['project_name'],
-                required: true,
-                validate: function (string $value): ?string {
-                    if (! preg_match('/^[a-zA-Z0-9-_]+$/', $value)) {
-                        return __('laravel.name_project_validation');
-                    }
-
-                    $projectPath = '/app/dir/'.$value;
-                    if (is_dir($projectPath)) {
-                        return __('laravel.name_project_exists', ['name' => $value]);
-                    }
-
-                    return null;
+        $this->answers['project_name'] = text(
+            label: {!! var_export(__('laravel.name_project'), true) !!},
+            default: $this->answers['project_name'],
+            required: true,
+            validate: function (string $value): ?string {
+                if (strlen($value) > 255 || ! preg_match({!! var_export($projectNamePattern, true) !!}, $value)) {
+                    return {!! var_export(__('laravel.name_project_validation'), true) !!};
                 }
-            );
 
-            $this->answers['project_name'] = $projectName;
-            $isValidProjectName = true;
-        }
+                $projectPath = '/app/dir/'.$value;
+                if (is_dir($projectPath)) {
+                    return strtr({!! var_export(__('laravel.name_project_exists'), true) !!}, [':name' => $value]);
+                }
 
-        $phpVersionOptions = [];
+                return null;
+            }
+        );
 
-        foreach (array_reverse(PhpVersionEnum::cases()) as $index => $phpVersion) {
-            $phpVersionOptions[$phpVersion->value] = 'PHP '.$phpVersion->value.($index === 0 ? ' ('.__('Recommended').')' : '');
-        }
+        $phpVersionOptions = {!! var_export($phpVersionOptions, true) !!};
 
         $this->answers['php_version'] = select(
-            label: __('laravel.php_version'),
+            label: {!! var_export(__('laravel.php_version'), true) !!},
             options: $phpVersionOptions,
         );
     }
@@ -113,7 +93,7 @@ final class Laravel
     private function promptForDatabase(): void
     {
         $this->answers['database'] = select(
-            label: __('laravel.database'),
+            label: {!! var_export(__('laravel.database'), true) !!},
             options: [
                 'sqlite' => 'SQLite',
                 'mysql' => 'MySQL',
@@ -126,9 +106,9 @@ final class Laravel
     private function promptForStarterKit(): void
     {
         $this->answers['starter_kit'] = select(
-            label: __('laravel.starter_kit'),
+            label: {!! var_export(__('laravel.starter_kit'), true) !!},
             options: [
-                'none' => __('laravel.starter_kit_none'),
+                'none' => {!! var_export(__('laravel.starter_kit_none'), true) !!},
                 'react' => 'React',
                 'vue' => 'Vue',
                 'livewire' => 'Livewire',
@@ -140,7 +120,7 @@ final class Laravel
         }
 
         if (! $this->answers['workos'] && $this->answers['starter_kit'] === 'livewire') {
-            $this->answers['livewire_volt'] = confirm(label: __('Would you like to use Laravel Volt?'), default: false);
+            $this->answers['livewire_volt'] = confirm(label: {!! var_export(__('Would you like to use Laravel Volt?'), true) !!}, default: false);
         }
 
         $this->promptForTestingFramework();
@@ -149,7 +129,7 @@ final class Laravel
     private function promptForTestingFramework(): void
     {
         $this->answers['testing_framework'] = mb_strtolower(select(
-            label: __('laravel.testing_framework'),
+            label: {!! var_export(__('laravel.testing_framework'), true) !!},
             options: ['Pest', 'PHPUnit']
         ));
     }
@@ -157,28 +137,28 @@ final class Laravel
     private function promptForQueue(): void
     {
         $this->answers['queue'] = select(
-            label: __('laravel.queue_service'),
+            label: {!! var_export(__('laravel.queue_service'), true) !!},
             options: [
-                'none' => __('None'),
-                'horizon' => 'Horizon ('.__('Recommended').')',
+                'none' => {!! var_export(__('None'), true) !!},
+                'horizon' => 'Horizon ('.{!! var_export(__('Recommended'), true) !!}.')',
                 'queue' => 'Queues native',
             ]
         );
 
         if ($this->answers['queue'] === 'queue') {
             $this->answers['queue_driver'] = select(
-                label: __('laravel.queue_driver'),
+                label: {!! var_export(__('laravel.queue_driver'), true) !!},
                 options: [
-                    'valkey' => 'Valkey ('.__('Recommended').')',
+                    'valkey' => 'Valkey ('.{!! var_export(__('Recommended'), true) !!}.')',
                     'redis' => 'Redis',
                     'database' => 'Database',
                 ]
             );
         } elseif ($this->answers['queue'] === 'horizon') {
             $this->answers['queue_driver'] = select(
-                label: __('laravel.queue_driver'),
+                label: {!! var_export(__('laravel.queue_driver'), true) !!},
                 options: [
-                    'valkey' => 'Valkey ('.__('Recommended').')',
+                    'valkey' => 'Valkey ('.{!! var_export(__('Recommended'), true) !!}.')',
                     'redis' => 'Redis',
                 ]
             );
@@ -188,11 +168,11 @@ final class Laravel
     private function promptForFeatures(): void
     {
         $this->answers['features'] = multiselect(
-            label: __('laravel.optional_features'),
+            label: {!! var_export(__('laravel.optional_features'), true) !!},
             options: [
                 'schedule' => 'Task Scheduling',
                 'reverb' => 'Reverb',
-                'octane' => __('Octane with FrankenPHP'),
+                'octane' => {!! var_export(__('Octane with FrankenPHP'), true) !!},
             ]
         );
     }
@@ -200,11 +180,9 @@ final class Laravel
     private function promptForJavascriptPackageManager(): void
     {
         $this->answers['javascript_package_manager'] = select(
-            label: __('laravel.javascript_package_manager'),
+            label: {!! var_export(__('laravel.javascript_package_manager'), true) !!},
             options: [
                 'npm',
-                //                'yarn',
-                //                'pnpm',
                 'bun',
             ]
         );
@@ -212,27 +190,27 @@ final class Laravel
 
     private function promptForInitializeGit(): void
     {
-        $this->answers['initialize_git'] = confirm(label: __('laravel.initialize_git'));
+        $this->answers['initialize_git'] = confirm(label: {!! var_export(__('laravel.initialize_git'), true) !!});
     }
 
     private function promptForAuth(): void
     {
         $this->answers['workos'] = match (select(
-            label: __('laravel.authentication_provider'),
+            label: {!! var_export(__('laravel.authentication_provider'), true) !!},
             options: [
-                'laravel' => __('laravel.laravel_auth'),
-                'workos' => __('laravel.workos'),
+                'laravel' => {!! var_export(__('laravel.laravel_auth'), true) !!},
+                'workos' => {!! var_export(__('laravel.workos'), true) !!},
             ],
             default: 'laravel',
         )) {
             'laravel' => false,
             'workos' => true,
-            default => null,
+            default => false,
         };
     }
 }
 
-$questionTree = new Laravel();
+$questionTree = new LaravelConfiguration();
 $answers = $questionTree->run();
 
-file_put_contents('/app/output/result.json', json_encode($answers, JSON_PRETTY_PRINT));
+file_put_contents($argv[1] ?? '/app/output/result.json', json_encode($answers, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));

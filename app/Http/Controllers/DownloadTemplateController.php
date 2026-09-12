@@ -28,16 +28,10 @@ final class DownloadTemplateController extends Controller
             return response('', SymfonyResponse::HTTP_NOT_FOUND);
         }
 
-        $archiveContent = Storage::disk('generated-templates')->get($template->id.'.tar');
-
-        //        Storage::disk('generated-templates')->delete($template->id.'.tar');
-
         $template->status = TemplateStatusEnum::Downloaded;
         $template->save();
 
-        return response()->streamDownload(function () use ($archiveContent) {
-            echo $archiveContent;
-        }, $template->id.'.tar', [
+        return Storage::disk('generated-templates')->download($template->id.'.tar', $template->id.'.tar', [
             'Content-Type' => 'application/x-tar',
             'Cache-Control' => 'no-store, no-cache, must-revalidate',
         ]);

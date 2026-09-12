@@ -10,6 +10,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.5.10",
+        "composer/metadata-minifier": "^1.0.1",
+        "composer/semver": "^3.4.4",
         "inertiajs/inertia-laravel": "^3.3.3",
         "laravel-lang/common": "^6.8.0",
         "laravel/framework": "^13.30.1",
@@ -69,7 +71,7 @@
         "lint": "pint",
         "test:lint": "pint --test",
         "test:types": "phpstan analyse --memory-limit=2G",
-        "test:unit": "pest --parallel --coverage --min=27.7",
+        "test:unit": "pest --parallel --coverage --min=90",
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "vp exec concurrently -c \"#c4b5fd,#fdba74,#93c5fd\" \"php artisan horizon\" \"vp dev\" \"php artisan schedule:work\" --names=horizon,vite,scheduler --kill-others"

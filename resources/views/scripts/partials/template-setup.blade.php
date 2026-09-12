@@ -1,14 +1,18 @@
-PROJECT_NAME="{{ $template['project_name'] }}"
+PROJECT_NAME={!! escapeshellarg($template['project_name']) !!}
 
 if [ -z "$PROJECT_NAME" ]; then
     error "Failed to extract project name from template"
+fi
+
+if [ -e "$PROJECT_NAME" ]; then
+    error "Directory '$PROJECT_NAME' already exists"
 fi
 
 @env('local')
     debug "Project name: $PROJECT_NAME"
 @endenv
 
-mkdir -p "$PROJECT_NAME"
+mkdir "$PROJECT_NAME"
 
 @env('local')
     info "Downloading template..."

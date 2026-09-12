@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 use Laravel\Sanctum\Sanctum;
 
+$statefulDomains = env('SANCTUM_STATEFUL_DOMAINS', sprintf(
+    '%s%s',
+    'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
+    Sanctum::currentApplicationUrlWithPort()
+));
+
+if (! is_string($statefulDomains)) {
+    throw new InvalidArgumentException('SANCTUM_STATEFUL_DOMAINS must be a comma-separated string.');
+}
+
 return [
 
     /*
@@ -17,11 +27,7 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort()
-    ))),
+    'stateful' => explode(',', $statefulDomains),
 
     /*
     |--------------------------------------------------------------------------

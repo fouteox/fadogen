@@ -4,18 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { ErrorMessage, Field, Label } from '@/components/ui/fieldset';
 import { Select } from '@/components/ui/select';
 import { fadeInAnimation } from '@/constants/animations';
-import { BaseFormSectionProps, QueueDriverValue, QueueHandlers, QueueTypeValue, SelectChangeEvent, SetDataMethod } from '@/types';
+import type { useLaravelForm } from '@/hooks/use-laravel-generator';
+import type { BaseFormSectionProps, FormValues, QueueDriverValue, QueueTypeValue, SelectChangeEvent, SetDataMethod } from '@/types';
 
-interface QueueConfigurationProps extends BaseFormSectionProps, QueueHandlers {
-    modifiedFields?: string[];
-}
+type QueueConfigurationProps = Omit<BaseFormSectionProps, 'validate'> & Pick<ReturnType<typeof useLaravelForm>, 'handleQueueChange'>;
 
-// Type corrigé pour QueueDriverSelectorProps
 type QueueDriverSelectorProps = {
     data: BaseFormSectionProps['data'];
     setData: SetDataMethod;
     queueType: QueueTypeValue;
-    modifiedFields?: string[];
+    modifiedFields?: (keyof FormValues)[];
 };
 
 const QueueDriverSelector = ({ data, setData, queueType, modifiedFields = [] }: QueueDriverSelectorProps) => {
@@ -25,8 +23,7 @@ const QueueDriverSelector = ({ data, setData, queueType, modifiedFields = [] }: 
         setData('queue_driver', e.target.value as QueueDriverValue);
     };
 
-    // Vérifier si un champ a été modifié automatiquement
-    const isFieldAutoDetected = (field: string): boolean => {
+    const isFieldAutoDetected = (field: keyof FormValues): boolean => {
         return modifiedFields.includes(field);
     };
 
@@ -54,11 +51,7 @@ export const QueueConfiguration = ({ data, setData, errors, handleQueueChange, m
 
     const currentQueueType = data.queue_type;
 
-    // Correction de l'erreur TS2367 en vérifiant le type d'une manière différente
-    const showDriverSelector = !!currentQueueType; // currentQueueType est défini et non falsy
-
-    // Vérifier si un champ a été modifié automatiquement
-    const isFieldAutoDetected = (field: string): boolean => {
+    const isFieldAutoDetected = (field: keyof FormValues): boolean => {
         return modifiedFields.includes(field);
     };
 
@@ -84,7 +77,7 @@ export const QueueConfiguration = ({ data, setData, errors, handleQueueChange, m
             </Field>
 
             <AnimatePresence mode="wait">
-                {showDriverSelector && currentQueueType && (
+                {currentQueueType && (
                     <motion.div {...fadeInAnimation}>
                         <QueueDriverSelector data={data} setData={setData} queueType={currentQueueType} modifiedFields={modifiedFields} />
                     </motion.div>

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, FieldsetInfoMessage, InfoMessage, Label, Legend } from '@/components/ui/fieldset';
 import { Input } from '@/components/ui/input';
@@ -7,18 +7,11 @@ import { Radio, RadioField, RadioGroup } from '@/components/ui/radio';
 import { Select } from '@/components/ui/select';
 import { Switch, SwitchField } from '@/components/ui/switch';
 import { fadeInAnimation } from '@/constants/animations';
-import { LaravelFormHook, PackageManager, SetDataMethod, TestingFramework } from '@/types';
+import type { useLaravelForm } from '@/hooks/use-laravel-generator';
+import type { BaseFormSectionProps, PackageManager, TestingFramework } from '@/types';
 
-interface StarterKitConfigurationProps {
-    data: LaravelFormHook['data'];
-    setData: SetDataMethod;
-    errors: LaravelFormHook['errors'];
-    validating?: LaravelFormHook['validating'];
-    validate: LaravelFormHook['validate'];
-    modifiedFields?: string[];
-    handleStackChange: LaravelFormHook['handleStackChange'];
-    detectDependencies?: LaravelFormHook['detectDependencies'];
-}
+type StarterKitConfigurationProps = BaseFormSectionProps &
+    Pick<ReturnType<typeof useLaravelForm>, 'handleStackChange' | 'detectDependencies' | 'isLoading'> & { packageError?: string };
 
 export const StarterKitConfiguration = ({
     data,
@@ -28,10 +21,10 @@ export const StarterKitConfiguration = ({
     modifiedFields = [],
     handleStackChange,
     detectDependencies,
+    isLoading,
+    packageError,
 }: StarterKitConfigurationProps) => {
     const { t } = useTranslation();
-    const [isPackageLoading, setIsPackageLoading] = useState(false);
-    const lastCheckedPackageRef = useRef<string | undefined>(data.custom_starter_kit);
 
     const handleTestingFrameworkChange = (value: string) => {
         setData('testing_framework', value as TestingFramework);
@@ -57,30 +50,10 @@ export const StarterKitConfiguration = ({
     const handlePackageBlur = async () => {
         validate('custom_starter_kit');
 
-        // Vérifier si la valeur a changé depuis la dernière vérification
-        const currentPackage = data.custom_starter_kit;
-        if (currentPackage === lastCheckedPackageRef.current || !currentPackage || currentPackage.trim() === '') {
-            return; // Ne rien faire si la valeur n'a pas changé ou est vide
-        }
-
-        // Déclencher la détection des dépendances seulement si:
-        // 1. Le starter_kit est 'custom'
-        // 2. Un nom de package a été entré
-        // 3. La fonction detectDependencies existe
-        if (data.starter_kit === 'custom' && detectDependencies) {
-            setIsPackageLoading(true);
-            try {
-                await detectDependencies(currentPackage);
-                // Mettre à jour la référence après une détection réussie
-                lastCheckedPackageRef.current = currentPackage;
-            } finally {
-                setIsPackageLoading(false);
-            }
-        }
+        await detectDependencies(data.custom_starter_kit);
     };
 
-    // Vérifier si un champ a été modifié automatiquement
-    const isFieldAutoDetected = (field: string): boolean => {
+    const isFieldAutoDetected = (field: keyof typeof data): boolean => {
         return modifiedFields.includes(field);
     };
 
@@ -117,15 +90,15 @@ export const StarterKitConfiguration = ({
                             </Description>
                             <Input
                                 name="custom_starter_kit"
-                                isLoading={isPackageLoading}
+                                isLoading={isLoading}
                                 value={data.custom_starter_kit || ''}
                                 onChange={handleCustomPackageChange}
                                 onBlur={handlePackageBlur}
                                 placeholder="vendor/package-name"
                                 required
-                                invalid={!!errors.custom_starter_kit}
+                                invalid={!!(errors.custom_starter_kit || packageError)}
                             />
-                            {errors.custom_starter_kit && <ErrorMessage>{errors.custom_starter_kit}</ErrorMessage>}
+                            {(errors.custom_starter_kit || packageError) && <ErrorMessage>{errors.custom_starter_kit || packageError}</ErrorMessage>}
                         </Field>
                     </motion.div>
                 )}

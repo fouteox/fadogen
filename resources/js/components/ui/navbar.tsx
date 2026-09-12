@@ -32,11 +32,11 @@ export const NavbarItem = forwardRef(function NavbarItem(
         current,
         className,
         children,
-        external,
         ...props
-    }: { current?: boolean; className?: string; children: React.ReactNode; external?: boolean } & (
-        | ({ href?: never } & Omit<Headless.ButtonProps, 'as' | 'className'>)
-        | ({ href: string } & Omit<React.ComponentPropsWithoutRef<typeof Link>, 'className'>)
+    }: { current?: boolean; className?: string; children: React.ReactNode } & (
+        | ({ href?: never; external?: false } & Omit<Headless.ButtonProps, 'as' | 'className'>)
+        | ({ href: string; external?: false } & Omit<React.ComponentPropsWithoutRef<typeof Link>, 'className'>)
+        | ({ href: string; external: true } & Omit<React.ComponentPropsWithoutRef<'a'>, 'className'>)
     ),
     ref: React.ForwardedRef<HTMLAnchorElement | HTMLButtonElement>,
 ) {
@@ -59,36 +59,43 @@ export const NavbarItem = forwardRef(function NavbarItem(
         'dark:data-active:bg-white/5 dark:data-active:*:data-[slot=icon]:fill-white',
     );
 
+    if (props.external) {
+        const { external: _external, ...anchorProps } = props;
+        return (
+            <span className={clsx(className, 'relative')}>
+                <Headless.DataInteractive>
+                    <a
+                        {...anchorProps}
+                        className={classes}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ref={ref as React.ForwardedRef<HTMLAnchorElement>}
+                    >
+                        <TouchTarget>{children}</TouchTarget>
+                    </a>
+                </Headless.DataInteractive>
+            </span>
+        );
+    }
+
+    const { external: _external, ...itemProps } = props;
+
     return (
         <span className={clsx(className, 'relative')}>
             {current && (
                 <motion.span layoutId="current-indicator" className="absolute inset-x-2 -bottom-2.5 h-0.5 rounded-full bg-zinc-950 dark:bg-white" />
             )}
-            {typeof props.href === 'string' ? (
-                external ? (
-                    <Headless.DataInteractive>
-                        <a
-                            href={props.href}
-                            className={classes}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            ref={ref as React.ForwardedRef<HTMLAnchorElement>}
-                        >
-                            <TouchTarget>{children}</TouchTarget>
-                        </a>
-                    </Headless.DataInteractive>
-                ) : (
-                    <Link
-                        {...props}
-                        className={classes}
-                        data-current={current ? 'true' : undefined}
-                        ref={ref as React.ForwardedRef<HTMLAnchorElement>}
-                    >
-                        <TouchTarget>{children}</TouchTarget>
-                    </Link>
-                )
+            {typeof itemProps.href === 'string' ? (
+                <Link
+                    {...itemProps}
+                    className={classes}
+                    data-current={current ? 'true' : undefined}
+                    ref={ref as React.ForwardedRef<HTMLAnchorElement>}
+                >
+                    <TouchTarget>{children}</TouchTarget>
+                </Link>
             ) : (
-                <Headless.Button {...props} className={clsx('cursor-default', classes)} data-current={current ? 'true' : undefined} ref={ref}>
+                <Headless.Button {...itemProps} className={clsx('cursor-default', classes)} data-current={current ? 'true' : undefined} ref={ref}>
                     <TouchTarget>{children}</TouchTarget>
                 </Headless.Button>
             )}
