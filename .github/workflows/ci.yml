@@ -143,97 +143,27 @@ jobs:
         run: vp run types
 
       - name: Build production assets and SSR bundle
-        run: vp run build:ssr
+        run: |
+          umask 077
+          vp run build:ssr
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
-      - name: Build production App image
+      - name: Build production image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           target: app
           load: true
-          tags: fadogen-app-smoke:${{ github.sha }}
+          tags: fadogen-smoke:${{ github.sha }}
           provenance: false
           sbom: false
 
-      - name: Build production SSR image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          target: ssr
-          load: true
-          tags: fadogen-ssr-smoke:${{ github.sha }}
-          provenance: false
-          sbom: false
-
-      - name: Smoke-test production images
-        run: |
-          app_image="fadogen-app-smoke:${GITHUB_SHA}"
-          ssr_image="fadogen-ssr-smoke:${GITHUB_SHA}"
-
-          docker run --rm \
-            --env APP_ENV=production \
-            --env APP_DEBUG=false \
-            --env APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
-            --env CACHE_STORE=array \
-            --env DB_CONNECTION=sqlite \
-            --env DB_DATABASE=/var/www/html/database/database.sqlite \
-            --env QUEUE_CONNECTION=sync \
-            --env SESSION_DRIVER=array \
-            --entrypoint sh \
-            "$app_image" \
-            -euc '
-              test -s public/build/manifest.json
-              php artisan about --only=environment
-              php -r '\''
-                  foreach (["bcmath", "pdo_sqlite"] as $extension) {
-                      if (! extension_loaded($extension)) {
-                          fwrite(STDERR, "Missing PHP extension: {$extension}\n");
-                          exit(1);
-                      }
-                  }
-              '\''
-            '
-
-          docker run --rm "$ssr_image" --version
-          docker run --rm "$ssr_image" --eval '
-            const bundle = Bun.file("bootstrap/ssr/app.js");
-
-            if (!await bundle.exists() || bundle.size === 0) {
-              console.error("Missing or empty SSR bundle");
-              process.exit(1);
-            }
-          '
-
-          ssr_container="$(docker run --detach "$ssr_image")"
-          cleanup_ssr() {
-            docker rm --force "$ssr_container" >/dev/null 2>&1 || true
-          }
-          trap cleanup_ssr EXIT
-
-          ssr_ready=false
-          for _ in {1..10}; do
-            if docker logs "$ssr_container" 2>&1 | grep -Fq 'Inertia SSR server started.'; then
-              ssr_ready=true
-              break
-            fi
-
-            if [[ "$(docker inspect --format '{{.State.Running}}' "$ssr_container")" != "true" ]]; then
-              break
-            fi
-
-            sleep 1
-          done
-
-          if [[ "$ssr_ready" != "true" ]]; then
-            docker logs "$ssr_container"
-            exit 1
-          fi
-
-          cleanup_ssr
-          trap - EXIT
+      - name: Test web and SSR from the same production image
+        env:
+          IMAGE_REF: fadogen-smoke:${{ github.sha }}
+        run: .github/scripts/tests/test-production-image.sh "$IMAGE_REF"
 
   zizmor:
     name: zizmor (audit workflows)

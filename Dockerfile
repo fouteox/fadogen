@@ -32,9 +32,16 @@ COPY --link . .
 RUN composer dump-autoload --classmap-authoritative --no-dev
 
 ############################################
-# App Image
+# Bun Runtime (the pinned binary is shared by web and SSR)
+############################################
+FROM oven/bun:1.4-distroless@sha256:1a0c31c7c5f9d193aedf60fe1cebdeb76ac8f6e29f24be8dd8cbd6df72df26ec AS bun
+
+############################################
+# App Image (also runs SSR via `php artisan inertia:start-ssr --runtime=bun`)
 ############################################
 FROM base AS app
+
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
 COPY --link --chown=33:33 --from=builder /var/www/html/vendor ./vendor
 COPY --link --chown=33:33 --from=builder /var/www/html/bootstrap/cache ./bootstrap/cache
@@ -61,24 +68,3 @@ RUN cp /usr/local/bin/frankenphp /tmp/frankenphp \
     && mv /tmp/frankenphp /usr/local/bin/frankenphp
 
 USER www-data
-
-############################################
-# SSR Image
-############################################
-FROM oven/bun:1.4-distroless@sha256:1a0c31c7c5f9d193aedf60fe1cebdeb76ac8f6e29f24be8dd8cbd6df72df26ec AS ssr
-
-WORKDIR /app
-
-# bootstrap/ssr is produced by `vp run build:ssr` on the runner, under
-# `umask 077` (build.yml) — the bundle lands 0600 in the context, so it
-# must be chowned to the runtime user or the non-root server cannot read it.
-COPY --link --chown=1000:1000 bootstrap/ssr ./bootstrap/ssr
-
-# Keep the numeric non-root identity enforced by the GitOps deployment. Numeric
-# IDs do not depend on a shell or a named /etc/passwd entry in distroless.
-USER 1000:1000
-
-EXPOSE 13714
-
-ENTRYPOINT ["/usr/local/bin/bun"]
-CMD ["bootstrap/ssr/app.js"]
