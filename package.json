@@ -13,26 +13,26 @@
     "type": "module",
     "devDependencies": {
         "@headlessui/react": "2.2.10",
-        "@inertiajs/react": "3.7.0",
-        "@laravel/vite-plugin-wayfinder": "0.1.10",
+        "@inertiajs/react": "3.11.0",
+        "@laravel/vite-plugin-wayfinder": "0.1.11",
         "@tailwindcss/vite": "4.3.3",
         "@types/react": "19.2.18",
         "@types/react-dom": "19.2.7",
-        "@vitejs/plugin-react": "6.1.1",
-        "axios": "1.20.0",
+        "@vitejs/plugin-react": "6.2.1",
+        "axios": "1.21.0",
         "clsx": "2.1.1",
-        "concurrently": "10.0.5",
-        "i18next": "26.4.2",
-        "i18next-browser-languagedetector": "8.2.1",
+        "concurrently": "10.0.6",
+        "i18next": "26.7.1",
+        "i18next-browser-languagedetector": "8.3.0",
         "i18next-http-backend": "4.0.2",
-        "laravel-echo": "2.4.0",
+        "laravel-echo": "2.6.3",
         "laravel-vite-plugin": "3.2.0",
         "lucide-react": "1.43.0",
-        "motion": "13.2.0",
+        "motion": "13.5.1",
         "pusher-js": "8.6.0",
         "react": "19.2.8",
         "react-dom": "19.2.8",
-        "react-i18next": "17.0.13",
+        "react-i18next": "17.1.12",
         "sonner": "2.0.8",
         "tailwindcss": "4.3.3",
         "typescript": "7.0.2",
@@ -42,12 +42,12 @@
     "devEngines": {
         "runtime": {
             "name": "node",
-            "version": "24.18.0",
+            "version": "24.22.2",
             "onFail": "download"
         }
     },
     "dependencies": {
-        "@inertiajs/vite": "3.7.0"
+        "@inertiajs/vite": "3.11.0"
     },
     "overrides": {
         "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0"
@@ -55,5 +55,5 @@
     "trustedDependencies": [
         "@tailwindcss/oxide"
     ],
-    "packageManager": "bun@1.4.2"
+    "packageManager": "bun@1.4.4"
 }
