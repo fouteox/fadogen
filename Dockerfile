@@ -34,7 +34,7 @@ RUN composer dump-autoload --classmap-authoritative --no-dev
 ############################################
 # Bun Runtime (the pinned binary is shared by web and SSR)
 ############################################
-FROM oven/bun:1.4-distroless@sha256:1a0c31c7c5f9d193aedf60fe1cebdeb76ac8f6e29f24be8dd8cbd6df72df26ec AS bun
+FROM oven/bun:1.4-distroless@sha256:153a951ae40106e125898103e6e990ee0f38e6aee7f561029e26cf9fbed23470 AS bun
 
 ############################################
 # App Image (also runs SSR via `php artisan inertia:start-ssr --runtime=bun`)
