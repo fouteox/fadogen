@@ -11,7 +11,7 @@ if [[ "$1" == "buildx" && "$2" == "imagetools" && "$3" == "inspect" ]]; then
 
     if [[ "$reference" == oven/bun:* ]]; then
         case "${SCENARIO:?}" in
-            valid)
+            valid | rerun-release)
                 fixture="index-valid.json"
                 ;;
             malformed-index)
