@@ -17,11 +17,19 @@ case "$endpoint" in
     repos/oven-sh/bun/releases/tags/bun-v1.4.0)
         cat "$FIXTURES_DIR/release.json"
         ;;
-    repos/oven-sh/bun/actions/runs/123456)
-        cat "$FIXTURES_DIR/run.json"
+    repos/oven-sh/bun/actions/runs/123456/attempts/1)
+        if [[ "$SCENARIO" == "rerun-release" ]]; then
+            jq '.run_attempt = 1 | .conclusion = "failure"' "$FIXTURES_DIR/run.json"
+        else
+            cat "$FIXTURES_DIR/run.json"
+        fi
         ;;
-    repos/oven-sh/bun/actions/runs/123456/jobs)
+    repos/oven-sh/bun/actions/runs/123456/attempts/1/jobs)
         cat "$FIXTURES_DIR/jobs.json"
+        ;;
+    repos/oven-sh/bun/actions/runs/123456 | repos/oven-sh/bun/actions/runs/123456/jobs)
+        echo "The latest run attempt must not replace the attested one: $endpoint" >&2
+        exit 1
         ;;
     *)
         echo "Unexpected GitHub API fixture: $endpoint" >&2

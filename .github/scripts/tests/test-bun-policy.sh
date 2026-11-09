@@ -14,7 +14,7 @@ fixture_digest() {
 
 index_fixture() {
     case "$1" in
-        valid)
+        valid | rerun-release)
             printf '%s\n' "$fixtures_dir/index-valid.json"
             ;;
         malformed-index)
@@ -97,6 +97,9 @@ expect_failure() {
 expect_success \
     "valid multi-architecture Bun provenance" \
     run_provenance_scenario valid
+expect_success \
+    "provenance from an attempt of a release run relaunched later" \
+    run_provenance_scenario rerun-release
 expect_failure \
     "malformed OCI index" \
     "" \

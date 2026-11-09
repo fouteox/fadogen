@@ -243,8 +243,10 @@ jq -e \
     ' \
     "$release_file" >/dev/null
 
+# La provenance nomme la tentative qui a publié l'image. Un run de release
+# relancé ensuite ne doit pas la remplacer : on lit cette tentative-là.
 run_file="$work_dir/run.json"
-gh api "repos/oven-sh/bun/actions/runs/$run_id" > "$run_file"
+gh api "repos/oven-sh/bun/actions/runs/$run_id/attempts/$run_attempt" > "$run_file"
 
 jq -e \
     --arg release_version "$release_version" \
@@ -263,7 +265,7 @@ jq -e \
     "$run_file" >/dev/null
 
 jobs_file="$work_dir/jobs.json"
-gh api --paginate "repos/oven-sh/bun/actions/runs/$run_id/jobs" > "$jobs_file"
+gh api --paginate "repos/oven-sh/bun/actions/runs/$run_id/attempts/$run_attempt/jobs" > "$jobs_file"
 
 jq -s -e \
     --arg source_sha "$source_sha" \
