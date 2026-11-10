@@ -96,7 +96,12 @@
         "platform": {
             "php": "8.5.12"
         },
-        "platform-check": true
+        "platform-check": true,
+        "policy": {
+            "cooldown": {
+                "period": "3 days"
+            }
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true

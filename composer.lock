@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9b642178d080cfe8f1c76d30bad81396",
+    "content-hash": "5641210a1bec6750b6d4009aadec15f8",
     "packages": [
         {
             "name": "archtechx/enums",
@@ -12544,7 +12544,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-09-03T20:38:19+00:00"
+            "time": "2026-09-03T20:38:19+00:00",
+            "published-time": "2026-09-03T20:38:35+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
