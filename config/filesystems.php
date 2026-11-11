@@ -68,11 +68,34 @@ return [
             'throw' => false,
         ],
 
-        'generated-templates' => [
-            'driver' => 'local',
-            'root' => storage_path('app/generated-templates'),
-            'throw' => false,
-        ],
+        /*
+         * Archives produites par ProcessTemplateJob (pod Horizon) et servies
+         * par DownloadTemplateController (pods web). Le disque local ne vaut
+         * que sur une seule machine : dès que ces processus tournent dans des
+         * conteneurs distincts, GENERATED_TEMPLATES_DISK_DRIVER=s3 place les
+         * archives dans le bucket AWS_* (R2), sous le préfixe
+         * generated-templates. En s3, un échec d'écriture lève une exception
+         * pour que le job passe le template en échec au lieu de l'annoncer
+         * prêt.
+         */
+        'generated-templates' => env('GENERATED_TEMPLATES_DISK_DRIVER', 'local') === 's3'
+            ? [
+                'driver' => 's3',
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'region' => env('AWS_DEFAULT_REGION'),
+                'bucket' => env('AWS_BUCKET'),
+                'endpoint' => env('AWS_ENDPOINT'),
+                'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+                'root' => 'generated-templates',
+                'throw' => true,
+                'report' => false,
+            ]
+            : [
+                'driver' => 'local',
+                'root' => storage_path('app/generated-templates'),
+                'throw' => false,
+            ],
 
     ],
 
