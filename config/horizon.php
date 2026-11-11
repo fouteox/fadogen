@@ -200,7 +200,11 @@ return [
     'environments' => [
         'production' => [
             'supervisor-1' => [
-                'maxProcesses' => 10,
+                // Le pod Horizon est limité à 256 Mi : le master et le
+                // superviseur occupent déjà deux processus PHP, et chaque
+                // worker peut monter à 128 Mo avant d'être recyclé. Dix
+                // workers dépassaient la limite d'un facteur cinq.
+                'maxProcesses' => 2,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
