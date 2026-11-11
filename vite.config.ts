@@ -12,7 +12,9 @@ export default defineConfig({
         useTabs: false,
         semi: true,
         singleQuote: true,
-        ignorePatterns: ['**/*', '!resources/**', 'resources/js/actions/**', 'resources/js/routes/**', 'resources/js/wayfinder/**'],
+        // Oxfmt ne réinclut pas un fichier dont le dossier parent est ignoré :
+        // `!*/` rouvre les dossiers avant de limiter le formatage à resources/.
+        ignorePatterns: ['**/*', '!*/', '!resources/**', 'resources/js/actions/**', 'resources/js/routes/**', 'resources/js/wayfinder/**'],
         overrides: [{ files: ['**/*.yml'], options: { tabWidth: 2 } }],
         sortTailwindcss: {
             functions: ['clsx', 'cn'],
