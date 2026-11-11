@@ -19,7 +19,7 @@
         "concurrently": "10.0.6",
         "i18next": "26.7.1",
         "i18next-browser-languagedetector": "8.3.0",
-        "i18next-http-backend": "4.0.2",
+        "i18next-http-backend": "4.0.10",
         "laravel-echo": "2.6.3",
         "laravel-vite-plugin": "3.2.1",
         "lucide-react": "1.43.0",
@@ -454,7 +454,7 @@
 
     "i18next-browser-languagedetector": ["i18next-browser-languagedetector@8.3.0", "", { "dependencies": { "@babel/runtime": "^7.29.2" } }, "sha512-t7FtF+VyQ+XSy+GI1O9TXWsMzP4U2u0m27yxJcCbG4LaAbTQa3CXFXgG3LvRivS+ZoYah8yPv5NhMl+Wg6I8Fg=="],
 
-    "i18next-http-backend": ["i18next-http-backend@4.0.2", "", {}, "sha512-oay62dIB2kL7+WHzoUXBjWfL3+mwijD3pQkQkIEaRLhy6kjXxUhrRenV0gInwlCASAaJaDy94+XvYizK+cAGdA=="],
+    "i18next-http-backend": ["i18next-http-backend@4.0.10", "", {}, "sha512-CfdQuwIVijbrS/fmiTAQYcYyje4nMbH9aIjKYhhm5bgVmWKWLOM1F7qrA1o63Jl1JxQcRjdtWhKlvDzyqV9aPg=="],
 
     "jiti": ["jiti@2.7.0", "", { "bin": { "jiti": "lib/jiti-cli.mjs" } }, "sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ=="],
 
