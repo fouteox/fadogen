@@ -189,7 +189,7 @@ jobs:
           printf 'renovate=%s\n' "$image_ref" >> "$GITHUB_OUTPUT"
 
       - name: Date every new reference with its registry
-        uses: fouteox/infra/.github/actions/release-age@53e918bda4d8ce636cbecaa38e16cdbe6183dee8
+        uses: $/.github/actions/release-age
         with:
           base: ${{ github.event.pull_request.base.sha }}
           renovate-image: ${{ steps.images.outputs.renovate }}
