@@ -165,6 +165,37 @@ jobs:
           IMAGE_REF: fadogen-smoke:${{ github.sha }}
         run: .github/scripts/tests/test-production-image.sh "$IMAGE_REF"
 
+  release-age:
+    name: Release age of new images
+    # Renovate ne date pas les images GHCR : chaque nouvelle référence d'image
+    # est datée par son registre et refusée avant 72 heures.
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - id: images
+        name: Pinned Renovate engine for the extraction
+        run: |
+          # renovate: datasource=docker depName=ghcr.io/renovatebot/renovate
+          image_ref="ghcr.io/renovatebot/renovate:44.227.2@sha256:90cdd4b76b2cb51f11864572bfadae82af8f254c01dbe7a9456c1d3643d383ff"
+          printf 'renovate=%s\n' "$image_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Date every new reference with its registry
+        uses: fouteox/infra/.github/actions/release-age@53e918bda4d8ce636cbecaa38e16cdbe6183dee8
+        with:
+          base: ${{ github.event.pull_request.base.sha }}
+          renovate-image: ${{ steps.images.outputs.renovate }}
+          exemptions: .github/release-age-exemptions.json
+          github-token: ${{ github.token }}
+
   zizmor:
     name: zizmor (audit workflows)
     runs-on: ubuntu-26.04

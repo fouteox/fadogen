@@ -1,0 +1,4 @@
+{
+  "description": "Références d'images que l'action release-age d'infra n'exige pas âgées de 72 heures. Chaque entrée nomme un motif fnmatch du nom canonique et sa raison. Une exemption ponctuelle, par exemple un correctif de sécurité urgent, s'ajoute dans la PR qui l'utilise et se retire ensuite.",
+  "exemptions": []
+}
