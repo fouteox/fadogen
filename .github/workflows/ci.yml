@@ -107,7 +107,6 @@ jobs:
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@cab1ab9eaff52d4857875f4f2c016e36af8f2c76 # v1.22.0
         with:
-          node-version: '24'
           cache: false
           run-install: false
 
@@ -120,6 +119,15 @@ jobs:
 
       - name: Install frontend dependencies
         run: vp install --frozen-lockfile
+
+      - name: Vitest pin matches vite-plus
+        # viteplus.dev/guide/local-cli : l'override vitest doit égaler la
+        # version que vite-plus embarque, sinon deux copies coexistent.
+        run: |
+          pinned=$(jq -r '.overrides.vitest' package.json)
+          bundled=$(vp toolchain vitest | sed -n 's/.*depends on vitest@//p')
+          echo "override=$pinned vite-plus=$bundled"
+          test "$pinned" = "$bundled"
 
       - name: Generate Wayfinder types
         run: php artisan wayfinder:generate --no-interaction
