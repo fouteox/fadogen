@@ -1,0 +1,14 @@
+{
+  "customManagers": [
+    {
+      "description": "Images d'outillage exécutées dans les workflows : tag lisible et digest OCI immuable, tous deux suivis par Renovate.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/\\.github/workflows/[^/]+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s+image_ref=\"\\S+:(?<currentValue>[^@\\s\"]+)@(?<currentDigest>sha256:[a-f0-9]{64})\""
+      ]
+    }
+  ]
+}

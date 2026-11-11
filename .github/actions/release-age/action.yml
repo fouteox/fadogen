@@ -1,0 +1,65 @@
+name: Release age
+description: Refuse every new image or OCI chart reference younger than 72 hours, dated by its registry. Copy of fouteox/infra/.github/actions/release-age at e06e0c14d15da2f69cf20c7174b4a3dfc91461a5, vendored because this public repository cannot use actions from that private repository.
+inputs:
+  base:
+    description: Immutable event base commit
+    required: true
+  renovate-image:
+    description: Pinned Renovate runtime (name:tag@digest) that extracts the references
+    required: true
+  exemptions:
+    description: Repository-owned exemptions file, relative to the checkout
+    default: ci/release-age-exemptions.json
+  github-token:
+    description: Token that reads GitHub Packages versions (packages read)
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Test the release age check
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: python3 -B -m unittest test_release_age
+    - name: Extract the base and head references with the pinned Renovate engine
+      shell: bash
+      env:
+        BASE_SHA: ${{ inputs.base }}
+        IMAGE_REF: ${{ inputs.renovate-image }}
+        GLOBAL_CONFIG: ${{ github.action_path }}/renovate-global.json
+      run: |
+        set -euo pipefail
+        # Renovate reads each repository's own renovate.json; the global file
+        # adds the shared image_ref manager of the workflows, which the common
+        # policy declares outside these repositories.
+        # Une archive plutôt qu'un worktree : un runner persistant garderait
+        # le worktree enregistré d'un job précédent.
+        mkdir "$RUNNER_TEMP/release-age-base"
+        git archive "$BASE_SHA" | tar -x -C "$RUNNER_TEMP/release-age-base"
+        out="$RUNNER_TEMP/release-age"
+        mkdir -m 0777 "$out"
+        extract() {
+          docker run --rm -v "$1:/repo:ro" -v "$out:/out" -v "$GLOBAL_CONFIG:/config/global.json:ro" \
+            -w /repo -e LOG_LEVEL=warn -e RENOVATE_CONFIG_FILE=/config/global.json \
+            -e RENOVATE_PLATFORM=local -e RENOVATE_DRY_RUN=extract \
+            -e RENOVATE_REPORT_TYPE=file -e "RENOVATE_REPORT_PATH=/out/$2.json" \
+            "$IMAGE_REF" renovate
+          # Renovate exits 0 even when it cannot write its report.
+          test -s "$out/$2.json"
+        }
+        extract "$RUNNER_TEMP/release-age-base" base
+        extract "$PWD" head
+    - name: Date every new reference with its registry
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        EXEMPTIONS: ${{ inputs.exemptions }}
+        CHECK: ${{ github.action_path }}/check_release_age.py
+      run: |
+        set +e
+        python3 -B "$CHECK" --exemptions "$EXEMPTIONS" \
+          "$RUNNER_TEMP/release-age/base.json" "$RUNNER_TEMP/release-age/head.json" | tee "$RUNNER_TEMP/release-age.txt"
+        status=${PIPESTATUS[0]}
+        set -e
+        # shellcheck disable=SC2016 # Markdown backticks are literal text.
+        { echo '### Release age of new references'; echo; echo '```'; cat "$RUNNER_TEMP/release-age.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        exit "$status"
