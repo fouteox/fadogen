@@ -7,7 +7,6 @@ use App\Http\Controllers\DownloadTemplateController;
 use App\Http\Controllers\FetchTranslationsController;
 use App\Http\Controllers\GeneratorController;
 use App\Http\Controllers\InitController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionsController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
@@ -35,6 +34,7 @@ Route::middleware(['throttle:60,1'])->group(function () {
         ->name('dependencies.detect');
 
     Route::localizedGroup(fn () => Route::get('/prompts/{template}', QuestionsController::class)
+        ->where('template', 'laravel')
         ->name('prompts.questions')
     );
 
@@ -42,12 +42,6 @@ Route::middleware(['throttle:60,1'])->group(function () {
     Route::get('/generator/{template}', [GeneratorController::class, 'show'])->name('generator.show');
     Route::post('/generator', [GeneratorController::class, 'store'])->name('generator.store')
         ->middleware([HandlePrecognitiveRequests::class]);
-});
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // Le catalogue ne dépend que de la locale de l'URL : il sort du groupe web
