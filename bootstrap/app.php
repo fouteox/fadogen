@@ -23,10 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             SetLocaleMiddleware::class,
         ]);
 
-        $middleware->trustProxies(at: [
-            '172.16.0.0/12',
-            '192.168.0.0/16',
-        ]);
+        // Le conteneur n'est joignable qu'à travers le proxy qui termine le TLS,
+        // et la NetworkPolicy n'admet que Traefik. Les pods du cluster sont en
+        // 10.42.0.0/16 : sans cela, X-Forwarded-Proto est ignoré et l'URL de
+        // téléchargement, signée en https, est rejetée par un 403.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
