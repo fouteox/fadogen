@@ -138,7 +138,7 @@ final class ProcessTemplateJob implements ShouldQueue
         $starterKitType = $config['starter_kit'];
 
         if ($starterKitType === StarterKitEnum::None->value) {
-            $this->commands[] = 'ddev composer create-project "laravel/laravel:^12" --remove-vcs --prefer-dist --no-scripts';
+            $this->commands[] = 'ddev composer create-project "laravel/laravel:^13" --remove-vcs --prefer-dist --no-scripts';
         } elseif ($starterKitType === StarterKitEnum::Custom->value) {
             $this->commands[] = "ddev composer create-project {$config['custom_starter_kit']} --stability=dev --remove-vcs --prefer-dist --no-scripts";
         } else {
