@@ -50,4 +50,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/locales/{locale}/translation.json', FetchTranslationsController::class)->name('i18next.fetch');
+// Le catalogue ne dépend que de la locale de l'URL : il sort du groupe web
+// (ni session ni cookie) pour pouvoir être mis en cache.
+Route::get('/locales/{locale}/translation.json', FetchTranslationsController::class)
+    ->withoutMiddleware('web')
+    ->middleware('cache.headers:public;max_age=3600;etag')
+    ->name('i18next.fetch');
