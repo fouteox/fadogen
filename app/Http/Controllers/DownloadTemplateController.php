@@ -30,8 +30,6 @@ final class DownloadTemplateController extends Controller
 
         $archiveContent = Storage::disk('generated-templates')->get($template->id.'.tar');
 
-        //        Storage::disk('generated-templates')->delete($template->id.'.tar');
-
         $template->status = TemplateStatusEnum::Downloaded;
         $template->save();
 
