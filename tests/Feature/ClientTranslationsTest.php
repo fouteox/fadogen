@@ -74,7 +74,8 @@ test('le catalogue servi en JSON est cacheable et ne pose aucun cookie', functio
 });
 
 test('la page complète embarque le catalogue de la locale courante', function () {
-    $this->withUnencryptedCookie('locale', 'fr')
+    $this->withoutVite()
+        ->withUnencryptedCookie('locale', 'fr')
         ->get(route('welcome'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
