@@ -1,5 +1,4 @@
 import { useForm } from '@inertiajs/react';
-import axios, { AxiosResponse } from 'axios';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -51,11 +50,15 @@ export const useLaravelForm = () => {
 
         try {
             setIsLoading(true);
-            const response: AxiosResponse<{ detected: DetectedDependencies }> = await axios.get(detect().url, {
-                params: { package: customPackage },
+            const response = await fetch(detect.url({ query: { package: customPackage } }), {
+                headers: { Accept: 'application/json' },
             });
 
-            const { detected } = response.data;
+            if (!response.ok) {
+                throw new Error(`Dependency detection failed with status ${response.status}`);
+            }
+
+            const { detected } = (await response.json()) as { detected?: DetectedDependencies };
 
             if (detected) {
                 const newModifiedFields: string[] = [];
