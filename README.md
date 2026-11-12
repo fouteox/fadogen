@@ -4,23 +4,16 @@ Fadogen is a tool that allows you to create applications and deploy them very ea
 
 ## Building & deployment
 
-Container images are built and pushed to GHCR by
+A single container image, serving both the web application and the Inertia SSR
+process, is built and pushed to GHCR by
 [`.github/workflows/build.yml`](.github/workflows/build.yml) on every merge to
-`main` (a `-app` image and a `-ssr` image).
+`main`, and rebuilt weekly to pick up base image fixes. The build itself runs in
+the reusable workflow
+[`.github/workflows/build-image.yml`](.github/workflows/build-image.yml), which
+signs and attests the image.
 
-Front-end assets are pre-built on the CI runner (`bun run build:ssr`), so the
-Dockerfile `builder` stage only installs PHP dependencies and **no `.env` secret
-is ever baked into the image**.
-
-The workflow needs a single repository secret, **`ENV_FILE_BASE64`** — the
-base64 of a **build-only** `.env` (see [`.env.production.dist`](.env.production.dist)).
-It holds only what the asset build needs (app name/URL and `VITE_*`); the
-`APP_KEY` is generated on the fly during the build, and **no runtime secret**
-(database, cache, mail…) belongs here. Runtime configuration is provided by the
-deployment platform (a mounted, encrypted `.env` plus environment overrides).
-
-Regenerate the secret after editing the template:
-
-```sh
-base64 -i .env.production | gh secret set ENV_FILE_BASE64 -R fouteox/fadogen
-```
+Front-end assets are pre-built on the CI runner (`vp run build:ssr`) from the
+versioned [`.env.example`](.env.example), with an application key generated for
+the job and discarded afterwards. **CI never receives the production
+environment and no `.env` is baked into the image**: runtime configuration is
+provided by the deployment platform.
