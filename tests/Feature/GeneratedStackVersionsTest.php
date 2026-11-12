@@ -23,6 +23,7 @@ function generatedCommandsFor(DatabaseEnum $database): string
             'starter_kit' => 'none',
             'testing_framework' => 'phpunit',
             'features' => [],
+            'initialize_git' => false,
         ],
     ]);
 
