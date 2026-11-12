@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Data\ProjectConfigurationData;
 use App\Enums\DatabaseEnum;
 use App\Enums\FeaturesEnum;
 use App\Enums\JavascriptPackageManagerEnum;
@@ -11,163 +12,135 @@ use App\Enums\PhpVersionEnum;
 use App\Enums\QueueDriverEnum;
 use App\Enums\QueueTypeEnum;
 use App\Enums\TestingFrameworkEnum;
-use Exception;
-use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 final class DependenciesDetectionController extends Controller
 {
-    public function detect(): JsonResponse
+    /**
+     * Fichiers lus dans le dépôt du starter kit, chacun sur les branches main
+     * puis master.
+     */
+    private const array REPOSITORY_FILES = ['composer.json', '.env.example', 'package-lock.json', 'bun.lock', 'bun.lockb'];
+
+    private const array REPOSITORY_BRANCHES = ['main', 'master'];
+
+    public function detect(Request $request): JsonResponse
     {
-        $customPackage = request()->input('package');
+        if (! $request->filled('package')) {
+            return response()->json();
+        }
+
+        $package = $request->validate([
+            'package' => ['string', 'max:255', 'regex:'.ProjectConfigurationData::COMPOSER_PACKAGE_PATTERN],
+        ])['package'];
 
         $detectedDependencies = [
             'features' => [],
         ];
 
-        if (! $customPackage) {
-            return response()->json();
+        $files = $this->fetchRepositoryFiles($package);
+
+        $composerData = isset($files['composer.json']) ? json_decode($files['composer.json'], true) : null;
+
+        if (! is_array($composerData)) {
+            Log::info("Unable to read composer.json from repository $package");
+
+            return response()->json(['detected' => $detectedDependencies]);
         }
 
-        try {
-            $this->analyseCustomPackage($customPackage, $detectedDependencies);
-            $this->analyseRepositoryFiles($customPackage, $detectedDependencies);
-        } catch (Exception $e) {
-            Log::error("Error analyzing package $customPackage: ".$e->getMessage());
+        $this->analyseComposerData($composerData, $detectedDependencies);
+
+        if (isset($files['.env.example'])) {
+            $this->detectDatabaseFromEnvExample($files['.env.example'], $detectedDependencies);
+        }
+
+        if (isset($files['package-lock.json'])) {
+            $detectedDependencies['javascript_package_manager'] = JavascriptPackageManagerEnum::Npm->value;
+        } elseif (isset($files['bun.lock']) || isset($files['bun.lockb'])) {
+            $detectedDependencies['javascript_package_manager'] = JavascriptPackageManagerEnum::Bun->value;
         }
 
         return response()->json(['detected' => $detectedDependencies]);
     }
 
     /**
-     * Analyze GitHub repository configuration files
+     * Lit en une seule passe concurrente et bornée dans le temps les fichiers
+     * utiles du dépôt : un worker Octane ne reste jamais bloqué sur GitHub.
+     *
+     * @return array<string, string> Contenu par nom de fichier, branche main en priorité.
      */
-    private function analyseRepositoryFiles(string $package, array &$detectedDependencies): void
+    private function fetchRepositoryFiles(string $package): array
     {
-        try {
-            [$vendor, $repo] = explode('/', $package, 2);
+        $responses = Http::pool(function (Pool $pool) use ($package): array {
+            $requests = [];
 
-            $envExampleUrl = "https://raw.githubusercontent.com/$vendor/$repo/main/.env.example";
-            $response = Http::get($envExampleUrl);
-
-            if ($response->successful()) {
-                $this->detectDatabaseFromEnvExample($response->body(), $detectedDependencies);
-            } else {
-                $envExampleUrl = "https://raw.githubusercontent.com/$vendor/$repo/master/.env.example";
-                $response = Http::get($envExampleUrl);
-
-                if ($response->successful()) {
-                    $this->detectDatabaseFromEnvExample($response->body(), $detectedDependencies);
+            foreach (self::REPOSITORY_FILES as $file) {
+                foreach (self::REPOSITORY_BRANCHES as $branch) {
+                    $requests[] = $pool->as("$branch:$file")
+                        ->connectTimeout(2)
+                        ->timeout(4)
+                        ->get("https://raw.githubusercontent.com/$package/$branch/$file");
                 }
             }
 
-            $this->detectJsPackageManager($vendor, $repo, $detectedDependencies);
+            return $requests;
+        });
 
-        } catch (Exception $e) {
-            Log::info("Unable to analyze repository files for $package: ".$e->getMessage());
+        $files = [];
+
+        foreach (self::REPOSITORY_FILES as $file) {
+            foreach (self::REPOSITORY_BRANCHES as $branch) {
+                $response = $responses["$branch:$file"] ?? null;
+
+                if ($response instanceof Response && $response->successful()) {
+                    $files[$file] = $response->body();
+
+                    break;
+                }
+            }
         }
+
+        return $files;
     }
 
     /**
      * Detect database type from .env.example file
+     *
+     * @param  array<string, mixed>  $detectedDependencies
      */
     private function detectDatabaseFromEnvExample(string $envContent, array &$detectedDependencies): void
     {
         if (preg_match('/DB_CONNECTION=(\S+)/i', $envContent, $matches)) {
-            $dbConnection = mb_strtolower(mb_trim($matches[1]));
+            $database = match (mb_strtolower(mb_trim($matches[1]))) {
+                'mysql' => DatabaseEnum::Mysql,
+                'pgsql' => DatabaseEnum::Postgres,
+                'sqlite' => DatabaseEnum::SQLite,
+                'mariadb' => DatabaseEnum::Mariadb,
+                default => null,
+            };
 
-            switch ($dbConnection) {
-                case 'mysql':
-                    $detectedDependencies['database'] = DatabaseEnum::Mysql->value;
-                    break;
-                case 'pgsql':
-                    $detectedDependencies['database'] = DatabaseEnum::Postgres->value;
-                    break;
-                case 'sqlite':
-                    $detectedDependencies['database'] = DatabaseEnum::SQLite->value;
-                    break;
-                case 'mariadb':
-                    $detectedDependencies['database'] = DatabaseEnum::Mariadb->value;
-                    break;
+            if ($database !== null) {
+                $detectedDependencies['database'] = $database->value;
             }
         }
     }
 
     /**
-     * Detect JavaScript package manager by checking lock files existence
-     *
-     * @throws ConnectionException
+     * @param  array<string, mixed>  $composerData
+     * @param  array<string, mixed>  $detectedDependencies
      */
-    private function detectJsPackageManager(string $vendor, string $repo, array &$detectedDependencies): void
+    private function analyseComposerData(array $composerData, array &$detectedDependencies): void
     {
-        $npmLockUrl = "https://raw.githubusercontent.com/$vendor/$repo/main/package-lock.json";
-        $npmResponse = Http::get($npmLockUrl);
-
-        if ($npmResponse->successful()) {
-            $detectedDependencies['javascript_package_manager'] = JavascriptPackageManagerEnum::Npm->value;
-
-            return;
-        }
-
-        $npmLockUrl = "https://raw.githubusercontent.com/$vendor/$repo/master/package-lock.json";
-        $npmResponse = Http::get($npmLockUrl);
-
-        if ($npmResponse->successful()) {
-            $detectedDependencies['javascript_package_manager'] = JavascriptPackageManagerEnum::Npm->value;
-
-            return;
-        }
-
-        $bunLockUrl = "https://raw.githubusercontent.com/$vendor/$repo/main/bun.lockb";
-        $bunResponse = Http::head($bunLockUrl);
-
-        if ($bunResponse->successful()) {
-            $detectedDependencies['javascript_package_manager'] = JavascriptPackageManagerEnum::Bun->value;
-
-            return;
-        }
-
-        $bunLockUrl = "https://raw.githubusercontent.com/$vendor/$repo/master/bun.lockb";
-        $bunResponse = Http::head($bunLockUrl);
-
-        if ($bunResponse->successful()) {
-            $detectedDependencies['javascript_package_manager'] = JavascriptPackageManagerEnum::Bun->value;
-        }
-    }
-
-    /**
-     * @throws ConnectionException
-     * @throws Exception
-     */
-    private function analyseCustomPackage(string $package, array &$detectedDependencies): void
-    {
-        [$vendor, $repo] = explode('/', $package, 2);
-
-        $composerUrl = "https://raw.githubusercontent.com/$vendor/$repo/main/composer.json";
-        $response = Http::get($composerUrl);
-
-        if (! $response->successful()) {
-            $composerUrl = "https://raw.githubusercontent.com/$vendor/$repo/master/composer.json";
-            $response = Http::get($composerUrl);
-
-            if (! $response->successful()) {
-                throw new Exception("Unable to retrieve composer.json from repository $package");
-            }
-        }
-
-        $composerData = $response->json();
-
-        if (! $composerData) {
-            throw new Exception("Invalid composer.json format for $package");
-        }
-
-        $require = $composerData['require'] ?? [];
-        $requireDev = $composerData['require-dev'] ?? [];
+        $require = is_array($composerData['require'] ?? null) ? $composerData['require'] : [];
+        $requireDev = is_array($composerData['require-dev'] ?? null) ? $composerData['require-dev'] : [];
         $allDependencies = array_merge($require, $requireDev);
 
-        if (isset($allDependencies['php'])) {
+        if (is_string($allDependencies['php'] ?? null)) {
             $phpVersion = $this->extractPhpVersion($allDependencies['php']);
             if ($phpVersion) {
                 $detectedDependencies['php_version'] = $phpVersion;
@@ -177,6 +150,10 @@ final class DependenciesDetectionController extends Controller
         $this->detectLimitedDependencies($allDependencies, $detectedDependencies);
     }
 
+    /**
+     * @param  array<string, mixed>  $dependencies
+     * @param  array<string, mixed>  $detectedDependencies
+     */
     private function detectLimitedDependencies(array $dependencies, array &$detectedDependencies): void
     {
         if (isset($dependencies['laravel/horizon'])) {

@@ -98,7 +98,7 @@ final class ProjectConfigurationData extends Data
                     ['required', 'string', 'max:255', 'bail', 'regex:'.self::COMPOSER_PACKAGE_PATTERN, function ($attribute, $value, $fail) {
                         if (! empty($value)) {
                             try {
-                                $response = Http::get("https://packagist.org/packages/$value.json");
+                                $response = Http::connectTimeout(2)->timeout(5)->get("https://packagist.org/packages/$value.json");
                                 if (! $response->successful()) {
                                     $fail("Le package '$value' n'existe pas sur Packagist.org.");
                                 }
