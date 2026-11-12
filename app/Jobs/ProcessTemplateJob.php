@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Data\ProjectConfigurationData;
 use App\Enums\DatabaseEnum;
 use App\Enums\FeaturesEnum;
 use App\Enums\JavascriptPackageManagerEnum;
@@ -21,6 +22,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use PharData;
 use RuntimeException;
 use Throwable;
@@ -104,6 +106,10 @@ final class ProcessTemplateJob implements ShouldQueue
     private function generateCommands(): void
     {
         $config = $this->template->data;
+
+        if (! ProjectConfigurationData::isSafeForShell($config)) {
+            throw new InvalidArgumentException('La configuration enregistrée contient un nom de projet ou de starter kit non conforme.');
+        }
 
         $baseCommand = 'ddev config --project-type=laravel --project-name=%s --php-version=%s --disable-upload-dirs-warning';
         $docroot = 'public';

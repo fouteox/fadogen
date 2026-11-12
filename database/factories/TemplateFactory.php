@@ -20,7 +20,7 @@ final class TemplateFactory extends Factory
     {
         return [
             'data' => [
-                'project_name' => $this->faker->words(3, true),
+                'project_name' => $this->faker->slug(3),
                 'server_contact' => $this->faker->email(),
                 'needs_traefik' => $this->faker->boolean(),
                 'network' => $this->faker->optional()->word(),
