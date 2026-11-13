@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use RuntimeException;
 
 final class Template extends Model
 {
@@ -58,7 +59,14 @@ final class Template extends Model
      */
     protected function pruning(): void
     {
-        Storage::disk('generated-templates')->delete($this->id.'.tar');
+        $archive = $this->id.'.tar';
+
+        // Le disque ne lève pas d'exception : un échec renvoie false.
+        throw_unless(
+            Storage::disk('generated-templates')->delete($archive),
+            RuntimeException::class,
+            "Archive {$archive} non supprimée",
+        );
     }
 
     /**
