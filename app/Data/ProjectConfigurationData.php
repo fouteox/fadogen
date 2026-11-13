@@ -23,6 +23,18 @@ use Spatie\LaravelData\Support\Validation\ValidationContext;
 #[MergeValidationRules]
 final class ProjectConfigurationData extends Data
 {
+    /**
+     * Seuls ces caractères sont admis dans un nom de projet : il est recopié
+     * tel quel dans le script d'installation exécuté sur la machine cliente.
+     */
+    public const string PROJECT_NAME_PATTERN = '/\\A[a-zA-Z0-9_-]+\\z/';
+
+    /**
+     * Forme « vendor/package » des noms Composer, elle aussi recopiée dans le
+     * script d'installation.
+     */
+    public const string COMPOSER_PACKAGE_PATTERN = '/\\A[a-z0-9]([_.-]?[a-z0-9]+)*\\/[a-z0-9](([_.]|-{1,2})?[a-z0-9]+)*\\z/i';
+
     public function __construct(
         #[Max(255)]
         public string $project_name,
@@ -53,17 +65,40 @@ final class ProjectConfigurationData extends Data
         public bool $initialize_git,
     ) {}
 
+    /**
+     * Indique si une configuration déjà enregistrée peut être recopiée sans
+     * risque dans un script shell.
+     *
+     * @param  array<string, mixed>  $configuration
+     */
+    public static function isSafeForShell(array $configuration): bool
+    {
+        $projectName = $configuration['project_name'] ?? null;
+        $customStarterKit = $configuration['custom_starter_kit'] ?? null;
+
+        if (! is_string($projectName) || preg_match(self::PROJECT_NAME_PATTERN, $projectName) !== 1) {
+            return false;
+        }
+
+        if ($customStarterKit === null || $customStarterKit === '') {
+            return true;
+        }
+
+        return is_string($customStarterKit) && preg_match(self::COMPOSER_PACKAGE_PATTERN, $customStarterKit) === 1;
+    }
+
     public static function rules(ValidationContext $context): array
     {
         return [
+            'project_name' => ['regex:'.self::PROJECT_NAME_PATTERN],
             'features.*' => [Rule::enum(FeaturesEnum::class)],
             'custom_starter_kit' => [
                 Rule::when(
                     request()->input('starter_kit') === StarterKitEnum::Custom->value,
-                    ['required', 'string', 'max:255', function ($attribute, $value, $fail) {
+                    ['required', 'string', 'max:255', 'bail', 'regex:'.self::COMPOSER_PACKAGE_PATTERN, function ($attribute, $value, $fail) {
                         if (! empty($value)) {
                             try {
-                                $response = Http::get("https://packagist.org/packages/$value.json");
+                                $response = Http::connectTimeout(2)->timeout(5)->get("https://packagist.org/packages/$value.json");
                                 if (! $response->successful()) {
                                     $fail("Le package '$value' n'existe pas sur Packagist.org.");
                                 }
@@ -72,7 +107,7 @@ final class ProjectConfigurationData extends Data
                             }
                         }
                     }],
-                    ['nullable', 'string', 'max:255']
+                    ['nullable', 'string', 'max:255', 'regex:'.self::COMPOSER_PACKAGE_PATTERN]
                 ),
             ],
             'queue_driver' => [

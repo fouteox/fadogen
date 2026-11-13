@@ -62,12 +62,6 @@ return [
             'report' => false,
         ],
 
-        'templates' => [
-            'driver' => 'local',
-            'root' => resource_path('templates'),
-            'throw' => false,
-        ],
-
         /*
          * Archives produites par ProcessTemplateJob (pod Horizon) et servies
          * par DownloadTemplateController (pods web). Le disque local ne vaut

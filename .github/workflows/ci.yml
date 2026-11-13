@@ -120,6 +120,12 @@ jobs:
       - name: Install frontend dependencies
         run: vp install --frozen-lockfile
 
+      - name: Reject known HIGH/CRITICAL advisories in JavaScript dependencies
+        # Ni Renovate ni Dependabot ne corrigent une dépendance transitive
+        # Bun : sans cette porte, un avis publié reste dans le lock jusqu'à
+        # la prochaine maintenance du lockfile.
+        run: vp pm audit -- --audit-level=high
+
       - name: Vitest pin matches vite-plus
         # viteplus.dev/guide/local-cli : l'override vitest doit égaler la
         # version que vite-plus embarque, sinon deux copies coexistent.
@@ -207,6 +213,7 @@ jobs:
   zizmor:
     name: zizmor (audit workflows)
     runs-on: ubuntu-26.04
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

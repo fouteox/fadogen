@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Data\ProjectConfigurationData;
 use App\Models\Template;
 use Illuminate\Http\Response;
 
@@ -19,6 +20,8 @@ final class InitController extends Controller
 
     public function withTemplate(Template $template): Response
     {
+        abort_unless(ProjectConfigurationData::isSafeForShell($template->data), 404);
+
         return response()
             ->view('scripts.init', [
                 'template' => $template->data,

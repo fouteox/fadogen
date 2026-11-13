@@ -11,15 +11,41 @@ use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
-final readonly class I18NextTranslationsLoader
+final class I18NextTranslationsLoader
 {
+    /**
+     * Groupes PHP dont l'interface lit des clés, en plus des fichiers JSON.
+     * Les autres (validation, mots de passe, statuts HTTP…) ne servent qu'au
+     * serveur : les envoyer alourdissait chaque page de plus de 700 clés.
+     */
+    public const array CLIENT_GROUPS = ['laravel'];
+
+    /**
+     * Les fichiers de langue ne changent pas pendant la vie du processus :
+     * le catalogue d'une locale est calculé une fois par worker.
+     *
+     * @var array<string, array<string, string>>
+     */
+    private array $catalogues = [];
+
     public function __construct(
-        private Filesystem $fs,
-        private FileLoader $loader,
-        private string $langPath,
+        private readonly Filesystem $fs,
+        private readonly FileLoader $loader,
+        private readonly string $langPath,
     ) {}
 
+    /**
+     * @return array<string, string>
+     */
     public function loadTranslations(string $locale): array
+    {
+        return $this->catalogues[$locale] ??= $this->buildCatalogue($locale);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function buildCatalogue(string $locale): array
     {
         $fallbackLocale = config('app.fallback_locale', 'en');
         $useLocale = $this->localeExists($locale) ? $locale : $fallbackLocale;
@@ -29,9 +55,12 @@ final readonly class I18NextTranslationsLoader
         }
 
         $translations = $this->loader->load($useLocale, '*', '*');
-        $groups = array_map(
-            fn (SplFileInfo $file) => $file->getBasename('.php'),
-            $this->fs->files($this->langPath.'/'.$useLocale),
+        $groups = array_intersect(
+            array_map(
+                fn (SplFileInfo $file) => $file->getBasename('.php'),
+                $this->fs->files($this->langPath.'/'.$useLocale),
+            ),
+            self::CLIENT_GROUPS,
         );
 
         foreach ($groups as $group) {
