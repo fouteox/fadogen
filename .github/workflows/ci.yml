@@ -199,7 +199,7 @@ jobs:
         name: Pinned Renovate engine for the extraction
         run: |
           # renovate: datasource=docker depName=ghcr.io/renovatebot/renovate
-          image_ref="ghcr.io/renovatebot/renovate:44.239.1@sha256:7dba1a3b916a2cf302ba0df458ddcc8fcbac3c92d0fe9882ac13ba0363de656b"
+          image_ref="ghcr.io/renovatebot/renovate:44.257.9@sha256:d6b65ff3562dd499240b23d34ef806ec7e5fd2675e4236a027dfb36774f2aa75"
           printf 'renovate=%s\n' "$image_ref" >> "$GITHUB_OUTPUT"
 
       - name: Date every new reference with its registry
