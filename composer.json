@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.5.12",
+        "php": "^8.6.0",
         "inertiajs/inertia-laravel": "^3.7.0",
         "laravel-lang/common": "^6.8.0",
         "laravel/framework": "^13.40.0",
@@ -90,7 +90,7 @@
             "php-http/discovery": true
         },
         "platform": {
-            "php": "8.5.12"
+            "php": "8.6.0"
         },
         "platform-check": true,
         "policy": {
