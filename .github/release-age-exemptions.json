@@ -1,4 +1,9 @@
 {
   "description": "Références d'images que l'action release-age d'infra n'exige pas âgées de 72 heures. Chaque entrée nomme un motif fnmatch du nom canonique et sa raison. Une exemption ponctuelle, par exemple un correctif de sécurité urgent, s'ajoute dans la PR qui l'utilise et se retire ensuite.",
-  "exemptions": []
+  "exemptions": [
+    {
+      "package": "docker.io/serversideup/php",
+      "reason": "Digest 69aca7f2 de 8.6.0-frankenphp, construit le 20 novembre à 19:04 UTC et donc âgé de plus de 72 heures, que Docker Hub ne date plus depuis la reconstruction du tag le 24 novembre. footeox le fait déjà tourner en production. À retirer après la fusion de #123."
+    }
+  ]
 }
